@@ -24,9 +24,9 @@ if __name__ == '__main__':
     SettingsManagement.add()
     settings = SettingsManagement.get(1)
     if settings.password == 'strong-password':
-        SettingsManagement.update(1, password=ask('', 'TPCC', 'Enter preferred bot password'))
+        SettingsManagement.update(1, password=Ask('', 'TPCC', 'Enter preferred bot password').fancy())
 
-    tray = pystray.Icon('TPCC', Image.open('./ico.gif'), "t.me/nichindpf")
+    tray = pystray.Icon('TPCC', Image.open('./ico.gif'), "discord.gg/nichind")
 
 
     class AiogramBot:
@@ -95,6 +95,7 @@ if __name__ == '__main__':
     Thread(target=cycle, args=(tray, 'ico.gif')).start()
     Thread(target=tray.run).start()
 
+    tray.notify('Check your tray icons. Join discord.gg/nichind and t.me/nichindpf')
     while True:
         try:
             executor.start_polling(tg_bot.dp, skip_updates=True, timeout=2)

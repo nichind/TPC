@@ -20,6 +20,6 @@ python -m pip install pyinstaller
 python -m pip install pythonping
 python -m pip install psutil
 python -m pip install sv-ttk
-python -m PyInstaller --onefile --noconsole --copy-metadata magic_filter -F --paths=%~dp0.venv\Lib\site-packages --icon=ico.png --name=TPCC .\main.py
+python -m PyInstaller --onefile --noconsole --copy-metadata magic_filter -F --paths=%~dp0.venv\Lib\site-packages --icon=ico.gif --name=TPCC .\main.py
 
 pause
