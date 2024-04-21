@@ -1,6 +1,7 @@
 from tkinter import simpledialog, Tk
 import tkinter as tk
 from tkinter import ttk
+from .db import Settings
 import sv_ttk
 
 
@@ -40,3 +41,8 @@ class Ask:
         if self.result == f'''{"*" * (len(self.current_value) - 2)}{self.current_value[-3:-1]}''':
             self.result = self.current_value
         return self.result if self.result != '' else self.fancy(show)
+
+
+class App:
+    def __init__(self):
+        self.current_page = 'main'

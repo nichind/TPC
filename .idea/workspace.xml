@@ -6,23 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="51379bd4-57c1-4a19-93d7-33baece7a6c7" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/TPPC.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/TelegramPCControl.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/discord-ij.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/icon.svg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.bat" beforeDir="false" afterPath="$PROJECT_DIR$/build.bat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tpcc.sqlite" beforeDir="false" afterPath="$PROJECT_DIR$/tpcc.sqlite" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tpcc/commands.py" beforeDir="false" afterPath="$PROJECT_DIR$/tpcc/commands.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tpcc/icon.py" beforeDir="false" afterPath="$PROJECT_DIR$/tpcc/icon.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tpcc/page.py" beforeDir="false" afterPath="$PROJECT_DIR$/tpcc/page.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,12 +57,11 @@
   "keyToString": {
     "Python.main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "Shell Script.Run Build.executor": "Run",
     "app.teamhub.trackedBranches": "qe9t9o/main",
     "git-widget-placeholder": "main",
     "last_opened_file_path": "C:/Users/souca/PycharmProjects/TPCC2",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+    "settings.editor.selected.configurable": "me.rerere.discordij.setting.DiscordIJConfigurableProject"
   }
 }]]></component>
   <component name="RecentsManager">
