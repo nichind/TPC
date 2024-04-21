@@ -9,6 +9,9 @@ from aiogram import Bot
 import os
 import getpass
 from pathlib import Path
+from PIL import ImageTk, Image
+import io
+import webbrowser
 
 
 def ask(current_value: str = '', title: str = ' TPCC', prompt: str = '') -> str:
@@ -30,6 +33,7 @@ class Ask:
 
         root = tk.Tk(className=self.title)
         root.geometry('350x130')
+        root.resizable(0, 0)
         title = ttk.Label(root, text=self.prompt)
         title.pack(side='top', pady=12)
         entry = ttk.Entry(root, width=280)
@@ -55,7 +59,14 @@ class App:
         self.geometry = '350x230'
         self.current_page = 'main'
         self.root = tk.Tk(className=self.title)
+
         self.root.geometry(self.geometry)
+        self.root.resizable(0, 0)
+        self.root.deiconify()
+
+        photo = tk.PhotoImage(file='./ico.gif')
+        self.root.wm_iconphoto(False, photo)
+
         Thread(target=self.main).start()
         self.mainloop()
 
@@ -65,7 +76,6 @@ class App:
     def clear(self):
         for ele in self.root.winfo_children():
             ele.destroy()
-        sv_ttk.set_theme("dark")
 
     def settings(self):
         self.clear()
@@ -118,10 +128,10 @@ class App:
         apply_password.grid(row=4, column=1)
 
         if Path(r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tpcc.bat' % username).is_file():
-            boot_button = ttk.Button(text='remove from Windows boot', command=remove_from_boot)
+            boot_button = ttk.Button(text='remove from Win boot', command=remove_from_boot)
         else:
-            boot_button = ttk.Button(text='add to Windows boot', command=add_to_boot)
-        boot_button.grid(row=5, column=0, padx=8, pady=8)
+            boot_button = ttk.Button(text='add to Win boot', command=add_to_boot)
+        boot_button.grid(row=5, column=0, pady=8, sticky='W', padx=8)
 
         back = ttk.Button(text='Back', command=self.main)
         back.place(anchor='center', relx=.9, rely=.1)
@@ -129,8 +139,17 @@ class App:
     def links(self):
         self.clear()
 
-        text = ttk.Label(self.root, text='discord.gg/nichind\nt.me/nichindpf', font=('', 12))
-        text.pack(anchor='center', pady=0)
+        def telegram():
+            webbrowser.open('https://t.me/nichind')
+
+        def discord():
+            webbrowser.open('https://discord.gg/nichind')
+
+        telegram = ttk.Button(self.root, text="Telegram", command=telegram)
+        telegram.grid(row=0, column=0, padx=8, pady=8)
+
+        discord = ttk.Button(self.root, text="Discord", command=discord)
+        discord.grid(row=1, column=0, padx=8, pady=8)
 
         back = ttk.Button(text='Back', command=self.main)
         back.place(anchor='center', relx=.9, rely=.1)

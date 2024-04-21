@@ -128,6 +128,7 @@ class Commands:
 
                 info_dict['genres'] = list(info_dict['genres'])
 
+                print(info_dict)
                 return f'{info_dict["artist"]} — {info_dict["title"]}'
             return f'Nothing'
 

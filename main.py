@@ -62,4 +62,5 @@ if __name__ == '__main__':
     Thread(target=cycle, args=(tray, 'ico.gif')).start()
     Thread(target=tray.run).start()
 
+    notify('Started', 'TPCC')
     Run().go(tg_bot)
