@@ -84,7 +84,9 @@ class Commands:
 
         date = str(datetime.datetime.now().timestamp()).split(".")[0]
         ss = mss().shot(mon=-1, output=f'./data/screenshots/{date}.png')
-        await message.answer_photo(photo=open(ss, 'rb'), caption='Your desktop looks like this...',
+        await message.answer_photo(photo=open(ss, 'rb'),
+                                   caption=f'''Took this screenshot at 📅 {datetime.datetime.now().strftime("<code>%d/%m/%Y</code>, <code>%H:%M:%S</code>")}\n\n<i>/screenshot</i>''',
+                                   parse_mode='HTML',
                                    reply_markup=InlineKeyboardMarkup().row(
                                        InlineKeyboardButton(text='Send as file (full quality)',
                                                             callback_data=f'ss:{date}')))
@@ -129,8 +131,9 @@ class Commands:
                 return f'{info_dict["artist"]} — {info_dict["title"]}'
             return f'Nothing'
 
-        await message.answer(f"Current volume: {emj} <b>{vol_str}</b>\n🎧 Now playing: <b>{await get_media_info()}</b>",
-                             reply_markup=markup, parse_mode='HTML')
+        await message.answer(
+            f"Current volume: {emj} <b>{vol_str}</b>\nNow playing: 🎧 <b>{await get_media_info()}</b>\n\n<i>/media</i>",
+            reply_markup=markup, parse_mode='HTML')
 
     def setup(self, dp: Dispatcher):
         dp.register_message_handler(self.start, content_types=['text'], state='*', commands=['start'])

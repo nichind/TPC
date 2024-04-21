@@ -3,10 +3,6 @@ import os
 import random
 import time
 import aiogram.utils.exceptions
-from aiogram import types
-from aiogram.types import Message, CallbackQuery, BotCommand
-from aiogram import Bot, Dispatcher, executor
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from tpcc import *
 import pystray
 from PIL import Image
@@ -15,6 +11,10 @@ from pystray import MenuItem, Menu
 import getpass
 from threading import Thread
 from pathlib import Path
+from aiogram import types
+from aiogram.types import Message, CallbackQuery, BotCommand
+from aiogram import Bot, Dispatcher, executor
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 if __name__ == '__main__':
     def close():
@@ -49,42 +49,10 @@ if __name__ == '__main__':
     username = getpass.getuser()
 
 
-    def add_to_boot():
-        file_path = os.getcwd()
-        bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup' % username
-        with open(bat_path + '\\' + "tpcc.bat", "w+") as bat_file:
-            bat_file.write(r'start /MIN "" %s' % f'{file_path}/run_build.bat')
-
-
-    def remove_from_boot():
-        os.remove(r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tpcc.bat' % username)
-
-
-    def update_token():
-        settings = SettingsManagement.get(1)
-        new_token = Ask(settings.bot_token, 'TPCC', 'Bot token').fancy(False)
-        if new_token:
-            SettingsManagement.update(1, bot_token=new_token)
-
-
-    def change_password():
-        settings = SettingsManagement.get(1)
-        new_password = Ask(settings.password, 'TPCC', 'Enter preferred bot password').fancy(False)
-        if new_password:
-            SettingsManagement.update(1, password=new_password)
-            for user in asyncio.run(UserManagement.get_all()):
-                asyncio.run(UserManagement.update(user.user_id, access=False))
-
-
     def refresh_tray():
         while True:
             buttons = []
-            buttons.append(MenuItem(text="Bot token", action=update_token, default=True))
-            buttons.append(MenuItem(text="Bot password", action=change_password))
-            if Path(r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tpcc.bat' % username).is_file():
-                buttons.append(MenuItem('Dont start on Windows boot', remove_from_boot))
-            else:
-                buttons.append(MenuItem('Start on Windows boot', add_to_boot))
+            buttons.append(MenuItem(text="Open", action=App, default=True))
             buttons.append(MenuItem('Close', close))
             tray.menu = Menu(*buttons)
             time.sleep(0.2)
@@ -94,8 +62,4 @@ if __name__ == '__main__':
     Thread(target=cycle, args=(tray, 'ico.gif')).start()
     Thread(target=tray.run).start()
 
-    while True:
-        try:
-            executor.start_polling(tg_bot.dp, skip_updates=True, timeout=-1)
-        except:
-            time.sleep(5)
+    Run().go(tg_bot)
