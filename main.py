@@ -31,7 +31,6 @@ if __name__ == '__main__':
 
     class AiogramBot:
         def __init__(self):
-            load_dotenv()
             while True:
                 try:
                     settings = SettingsManagement.get(1)
@@ -95,9 +94,8 @@ if __name__ == '__main__':
     Thread(target=cycle, args=(tray, 'ico.gif')).start()
     Thread(target=tray.run).start()
 
-    tray.notify('Check your tray icons. Join discord.gg/nichind and t.me/nichindpf')
     while True:
         try:
-            executor.start_polling(tg_bot.dp, skip_updates=True, timeout=2)
+            executor.start_polling(tg_bot.dp, skip_updates=True, timeout=-1)
         except:
             time.sleep(5)

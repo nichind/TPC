@@ -1,4 +1,5 @@
 import asyncio
+import ctypes
 import datetime
 import random
 import pystray
@@ -19,6 +20,11 @@ from mss import mss
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from pynput.keyboard import Controller, KeyCode
 from pythonping import ping
+from pycaw import pycaw
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+from comtypes import CLSCTX_ALL
+from ctypes import cast, POINTER
+from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
 
 
 class IsAllowed(BoundFilter):
@@ -29,6 +35,7 @@ class IsAllowed(BoundFilter):
 
 class States(StatesGroup):
     captcha_solving = State()
+
 
 class Commands:
     def __init__(self, tray: pystray.Icon, token: str):
@@ -74,19 +81,61 @@ class Commands:
 
     async def screenshot(self, message: Message, state: FSMContext):
         await message.delete()
+
         date = str(datetime.datetime.now().timestamp()).split(".")[0]
         ss = mss().shot(mon=-1, output=f'./data/screenshots/{date}.png')
-        await message.answer_photo(photo=open(ss, 'rb'), caption='Your desktop looks like this...', reply_markup=InlineKeyboardMarkup().row(InlineKeyboardButton(text='SEND AS FILE (Full quality)', callback_data=f'ss:{date}')))
+        await message.answer_photo(photo=open(ss, 'rb'), caption='Your desktop looks like this...',
+                                   reply_markup=InlineKeyboardMarkup().row(
+                                       InlineKeyboardButton(text='Send as file (full quality)',
+                                                            callback_data=f'ss:{date}')))
 
-    async def media_control(self, message: Message, state: FSMContext):
-        markup = InlineKeyboardMarkup(row_width=3)
-        markup.row(InlineKeyboardButton(text='Previous ⏮️', callback_data='press:0xB1'), InlineKeyboardButton(text='Play/Pause ⏯️', callback_data='press:0xB3'), InlineKeyboardButton(text='Next ⏭️', callback_data='press:0xB0'))
-        markup.row(InlineKeyboardButton(text='Volume down 🔉', callback_data='press:0xAE'), InlineKeyboardButton(text='Mute/Unmute 🔇', callback_data='press:0xAD'), InlineKeyboardButton(text='Volume up 🔊', callback_data='press:0xAF'))
+    async def media_control(self, message: Message, state: FSMContext, winrt=None):
         await message.delete()
-        await message.answer('control /media', reply_markup=markup)
+
+        markup = InlineKeyboardMarkup(row_width=3)
+        markup.row(InlineKeyboardButton(text='Previous ⏮️', callback_data='press:0xB1'),
+                   InlineKeyboardButton(text='Play/Pause ⏯️', callback_data='press:0xB3'),
+                   InlineKeyboardButton(text='Next ⏭️', callback_data='press:0xB0'))
+        markup.row(InlineKeyboardButton(text='Volume down 🔉', callback_data='press:0xAE'),
+                   InlineKeyboardButton(text='Mute/Unmute 🔇', callback_data='press:0xAD'),
+                   InlineKeyboardButton(text='Volume up 🔊', callback_data='press:0xAF'))
+
+        # Current volume
+        devices = AudioUtilities.GetSpeakers()
+        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume = cast(interface, POINTER(IAudioEndpointVolume))
+        vol = volume.GetMasterVolumeLevelScalar() * 100
+        vol_str = f"{vol:.0f}%"
+
+        if int(vol) == 0 or volume.GetMute() == 1:
+            emj = "🔇"
+        elif int(vol) < 50:
+            emj = '🔉'
+        else:
+            emj = '🔊'
+
+        async def get_media_info():
+            sessions = await MediaManager.request_async()
+
+            current_session = sessions.get_current_session()
+            if current_session:
+                info = await current_session.try_get_media_properties_async()
+
+                info_dict = {song_attr: info.__getattribute__(song_attr) for song_attr in dir(info) if
+                             song_attr[0] != '_'}
+
+                info_dict['genres'] = list(info_dict['genres'])
+
+                return f'{info_dict["artist"]} — {info_dict["title"]}'
+            return f'Nothing'
+
+        await message.answer(f"Current volume: {emj} <b>{vol_str}</b>\n🎧 Now playing: <b>{await get_media_info()}</b>",
+                             reply_markup=markup, parse_mode='HTML')
 
     def setup(self, dp: Dispatcher):
         dp.register_message_handler(self.start, content_types=['text'], state='*', commands=['start'])
         dp.register_callback_query_handler(self.callbacks, state='*')
-        dp.register_message_handler(self.screenshot, IsAllowed(), content_types=['text'], state='*', commands=['screenshot', 'ss', 'sc', 'screen', 'sh'])
-        dp.register_message_handler(self.media_control, IsAllowed(), content_types=['text'], state='*', commands=['media', 'mc', 'music'])
+        dp.register_message_handler(self.screenshot, IsAllowed(), content_types=['text'], state='*',
+                                    commands=['screenshot', 'ss', 'sc', 'screen', 'sh'])
+        dp.register_message_handler(self.media_control, IsAllowed(), content_types=['text'], state='*',
+                                    commands=['media', 'mc', 'music'])
