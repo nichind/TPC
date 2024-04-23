@@ -8,4 +8,4 @@ def notify(message: str = 'Message', title: str = 'Notification', app_name: str 
         message=message,
         app_name=app_name,
         app_icon=app_icon
-        )
+    )

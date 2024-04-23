@@ -62,5 +62,5 @@ if __name__ == '__main__':
     Thread(target=cycle, args=(tray, 'ico.gif')).start()
     Thread(target=tray.run).start()
 
-    notify('Started', 'TPCC')
+    notify(f'🟢 Started (Connected as @{asyncio.run(tg_bot.bot.get_me())["username"]})', 'TPCC ‣')
     Run().go(tg_bot)

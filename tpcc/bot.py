@@ -1,6 +1,7 @@
 import time
 import aiogram
 from aiogram import executor
+import asyncio
 
 
 class Run:
@@ -11,5 +12,8 @@ class Run:
         while True:
             try:
                 executor.start_polling(tg_bot.dp, skip_updates=True, timeout=-1)
-            except:
+            except RuntimeError:
+                asyncio.set_event_loop(asyncio.new_event_loop())
+            except Exception as e:
+                print(e)
                 time.sleep(5)

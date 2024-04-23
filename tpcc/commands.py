@@ -2,9 +2,12 @@ import asyncio
 import ctypes
 import datetime
 import random
+import time
+from threading import Thread
+
+import aiogram.utils.exceptions
 import pystray
 from aiogram import types
-from aiogram.types import Message, CallbackQuery
 from aiogram import Bot, Dispatcher, executor
 from aiogram.types import Message, CallbackQuery, BotCommand
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -12,15 +15,12 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import BoundFilter
 from aiogram.dispatcher import FSMContext
 from .db import *
-import json
-from dotenv import load_dotenv
 import os
 import psutil
 from mss import mss
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from pynput.keyboard import Controller, KeyCode
 from pythonping import ping
-from pycaw import pycaw
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from comtypes import CLSCTX_ALL
 from ctypes import cast, POINTER
@@ -44,7 +44,7 @@ class Commands:
 
     async def start(self, message: Message, state: FSMContext):
         await message.delete()
-        await self.bot.set_my_commands(
+        await message.bot.set_my_commands(
             [BotCommand('start', 'Main menu'),
              BotCommand('screenshot', 'Get desktop screenshot'),
              BotCommand('media', 'Control media')])
@@ -91,50 +91,63 @@ class Commands:
                                        InlineKeyboardButton(text='Send as file (full quality)',
                                                             callback_data=f'ss:{date}')))
 
-    async def media_control(self, message: Message, state: FSMContext, winrt=None):
+    async def media_control(self, message: Message, state: FSMContext):
         await message.delete()
 
         markup = InlineKeyboardMarkup(row_width=3)
-        markup.row(InlineKeyboardButton(text='Previous ⏮️', callback_data='press:0xB1'),
-                   InlineKeyboardButton(text='Play/Pause ⏯️', callback_data='press:0xB3'),
-                   InlineKeyboardButton(text='Next ⏭️', callback_data='press:0xB0'))
-        markup.row(InlineKeyboardButton(text='Volume down 🔉', callback_data='press:0xAE'),
-                   InlineKeyboardButton(text='Mute/Unmute 🔇', callback_data='press:0xAD'),
-                   InlineKeyboardButton(text='Volume up 🔊', callback_data='press:0xAF'))
+        markup.row(InlineKeyboardButton(text='⏮️ Previous', callback_data='press:0xB1'),
+                   InlineKeyboardButton(text='⏯️ Play/Pause', callback_data='press:0xB3'),
+                   InlineKeyboardButton(text='⏭️ Next', callback_data='press:0xB0'))
+        markup.row(InlineKeyboardButton(text='🔉 Volume down', callback_data='press:0xAE'),
+                   InlineKeyboardButton(text='🔇 Mute/Unmute', callback_data='press:0xAD'),
+                   InlineKeyboardButton(text='🔊 Volume up', callback_data='press:0xAF'))
 
-        # Current volume
-        devices = AudioUtilities.GetSpeakers()
-        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume = cast(interface, POINTER(IAudioEndpointVolume))
-        vol = volume.GetMasterVolumeLevelScalar() * 100
-        vol_str = f"{vol:.0f}%"
+        async def get_text():
+            # Current volume
+            devices = AudioUtilities.GetSpeakers()
+            interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+            volume = cast(interface, POINTER(IAudioEndpointVolume))
+            vol = volume.GetMasterVolumeLevelScalar() * 100
+            vol_str = f"{vol:.0f}%"
 
-        if int(vol) == 0 or volume.GetMute() == 1:
-            emj = "🔇"
-        elif int(vol) < 50:
-            emj = '🔉'
-        else:
-            emj = '🔊'
+            if int(vol) == 0 or volume.GetMute() == 1:
+                emj = "🔇"
+            elif int(vol) < 50:
+                emj = '🔉'
+            else:
+                emj = '🔊'
 
-        async def get_media_info():
-            sessions = await MediaManager.request_async()
+            async def get_media_info():
+                sessions = await MediaManager.request_async()
 
-            current_session = sessions.get_current_session()
-            if current_session:
-                info = await current_session.try_get_media_properties_async()
+                current_session = sessions.get_current_session()
+                if current_session:
+                    info = await current_session.try_get_media_properties_async()
 
-                info_dict = {song_attr: info.__getattribute__(song_attr) for song_attr in dir(info) if
-                             song_attr[0] != '_'}
+                    info_dict = {song_attr: info.__getattribute__(song_attr) for song_attr in dir(info) if
+                                 song_attr[0] != '_'}
 
-                info_dict['genres'] = list(info_dict['genres'])
+                    info_dict['genres'] = list(info_dict['genres'])
 
-                print(info_dict)
-                return f'{info_dict["artist"]} — {info_dict["title"]}'
-            return f'Nothing'
+                    return f'{info_dict["artist"]} — {info_dict["title"]}'
+                return f'<i>Nothing</i>'
 
-        await message.answer(
-            f"Current volume: {emj} <b>{vol_str}</b>\nNow playing: 🎧 <b>{await get_media_info()}</b>\n\n<i>/media</i>",
-            reply_markup=markup, parse_mode='HTML')
+            return f"""Current volume: {emj} <b>{vol_str}</b>\nNow playing: 🎧 <b>{await get_media_info()}</b>\n\n<i>/media</i> • <i>last update {datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")}</i>"""
+
+        msg = await self.bot.send_message(message.from_user.id, await get_text(), reply_markup=markup,
+                                          parse_mode='HTML')
+
+        async def do():
+            bot = Bot(SettingsManagement.get(1).bot_token)
+            while True:
+                try:
+                    await bot.edit_message_text(await get_text(), msg.chat.id, msg.message_id, reply_markup=markup,
+                                                parse_mode='HTML')
+                except aiogram.utils.exceptions.MessageNotModified:
+                    pass
+                await asyncio.sleep(5)
+
+        Thread(target=asyncio.run, args=(do(),)).start()
 
     def setup(self, dp: Dispatcher):
         dp.register_message_handler(self.start, content_types=['text'], state='*', commands=['start'])
