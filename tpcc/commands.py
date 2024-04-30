@@ -4,7 +4,7 @@ import datetime
 import random
 import time
 from threading import Thread
-
+import psutil
 import aiogram.utils.exceptions
 import pystray
 from aiogram import types
@@ -58,6 +58,7 @@ class Commands:
         stats = f"""Hello, {message.from_user.full_name}\n📅 {datetime.datetime.now().strftime("<code>%d/%m/%Y</code>, <code>%H:%M:%S</code>")}"""
         stats += f"""\n\n<b>💻 Stats:</b>\n×\tCPU: <code>{psutil.cpu_percent()}%</code>\n×\tRAM: <code>{(psutil.virtual_memory().used // 1e+9)}GB</code>/<code>{(psutil.virtual_memory().total // 1e+9)}GB</code> (<code>{psutil.virtual_memory().percent}%</code>)"""
         stats += f"""\n×\tPING: <code>{int(ping('google.com').rtt_avg_ms)}ms</code>"""
+        stats += f"""\n\n\n<i><code>{str(psutil.Process().memory_info().rss * 0.000001)[0:5]}MB</code></i>"""
 
         markup = InlineKeyboardMarkup(row_width=3)
         markup.row(InlineKeyboardButton(text='Lock 🔒', callback_data='lock'))
@@ -145,9 +146,12 @@ class Commands:
                                                 parse_mode='HTML')
                 except aiogram.utils.exceptions.MessageNotModified:
                     pass
+                except:
+                    return
                 await asyncio.sleep(5)
 
-        Thread(target=asyncio.run, args=(do(),)).start()
+        return
+        # Thread(target=asyncio.run, args=(do(),)).start()
 
     def setup(self, dp: Dispatcher):
         dp.register_message_handler(self.start, content_types=['text'], state='*', commands=['start'])

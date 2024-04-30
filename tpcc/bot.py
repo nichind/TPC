@@ -1,6 +1,7 @@
 import time
 import aiogram
 from aiogram import executor
+from .notifications import notify
 import asyncio
 
 
