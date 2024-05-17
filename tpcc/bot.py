@@ -12,7 +12,7 @@ class Run:
     def go(self, tg_bot):
         while True:
             try:
-                executor.start_polling(tg_bot.dp, skip_updates=True, timeout=-1)
+                executor.start_polling(tg_bot.dp, skip_updates=True, timeout=3)
             except RuntimeError:
                 asyncio.set_event_loop(asyncio.new_event_loop())
             except Exception as e:

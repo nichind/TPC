@@ -18,7 +18,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 if __name__ == '__main__':
     def close():
-        os._exit(0)
+        os._exit(-1)
 
 
     SettingsManagement.add()
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     if settings.password == 'strong-password':
         SettingsManagement.update(1, password=Ask('', 'TPCC', 'Enter preferred bot password').fancy())
 
-    tray = pystray.Icon('TPCC', Image.open('./ico.gif'), "discord.gg/nichind")
+    tray = pystray.Icon('TPCC', Image.open('./ico.gif'), "@nichindpf")
 
 
     class AiogramBot:
@@ -51,9 +51,7 @@ if __name__ == '__main__':
 
     def refresh_tray():
         while True:
-            buttons = []
-            buttons.append(MenuItem(text="Open", action=App, default=True))
-            buttons.append(MenuItem('Close', close))
+            buttons = [MenuItem(text="Open", action=App, default=True), MenuItem('Close', close)]
             tray.menu = Menu(*buttons)
             time.sleep(0.2)
 

@@ -113,11 +113,6 @@ class App:
         apply_token = ttk.Button(text='Apply', command=change_token)
         apply_token.grid(row=1, column=1)
 
-        bot = Bot(settings.bot_token)
-        logged_as = ttk.Label(self.root, text=f"Connected as @{asyncio.run(bot.get_me())['username']}", font=(None, 8))
-        logged_as.grid(row=2, column=0, sticky="W", padx=8, pady=2)
-        asyncio.run((asyncio.run(bot.get_session())).close())
-
         password_title = ttk.Label(self.root, text="Bot password")
         password_title.grid(row=3, column=0, sticky="W", padx=8, pady=8)
         password_entry = ttk.Entry(self.root)
@@ -135,6 +130,11 @@ class App:
 
         back = ttk.Button(text='Back', command=self.main)
         back.place(anchor='center', relx=.9, rely=.1)
+
+        bot = Bot(settings.bot_token)
+        logged_as = ttk.Label(self.root, text=f"Connected as @{asyncio.run(bot.get_me())['username']}", font=(None, 8))
+        logged_as.grid(row=2, column=0, sticky="W", padx=8, pady=2)
+        asyncio.run((asyncio.run(bot.get_session())).close())
 
     def links(self):
         self.clear()

@@ -58,7 +58,7 @@ class Commands:
         stats = f"""Hello, {message.from_user.full_name}\n📅 {datetime.datetime.now().strftime("<code>%d/%m/%Y</code>, <code>%H:%M:%S</code>")}"""
         stats += f"""\n\n<b>💻 Stats:</b>\n×\tCPU: <code>{psutil.cpu_percent()}%</code>\n×\tRAM: <code>{(psutil.virtual_memory().used // 1e+9)}GB</code>/<code>{(psutil.virtual_memory().total // 1e+9)}GB</code> (<code>{psutil.virtual_memory().percent}%</code>)"""
         stats += f"""\n×\tPING: <code>{int(ping('google.com').rtt_avg_ms)}ms</code>"""
-        stats += f"""\n\n\n<i><code>{str(psutil.Process().memory_info().rss * 0.000001)[0:5]}MB</code></i>"""
+        stats += f"""\n\n\nTPC: <i><code>{str(psutil.Process().memory_info().rss * 0.000001)[0:5]}MB</code></i>"""
 
         markup = InlineKeyboardMarkup(row_width=3)
         markup.row(InlineKeyboardButton(text='Lock 🔒', callback_data='lock'))
@@ -91,6 +91,13 @@ class Commands:
                                    reply_markup=InlineKeyboardMarkup().row(
                                        InlineKeyboardButton(text='Send as file (full quality)',
                                                             callback_data=f'ss:{date}')))
+
+    async def lock(self, message: Message, state: FSMContext):
+        await message.delete()
+        os.system('rundll32.exe user32.dll,LockWorkStation')
+        await message.answer(
+            f'🔒 Successfully locked your PC (WIN+L) at {datetime.datetime.now().strftime("<code>%d/%m/%Y</code>, <code>%H:%M:%S</code>")}',
+            parse_mode='HTML')
 
     async def media_control(self, message: Message, state: FSMContext):
         await message.delete()
@@ -133,7 +140,7 @@ class Commands:
                     return f'{info_dict["artist"]} — {info_dict["title"]}'
                 return f'<i>Nothing</i>'
 
-            return f"""Current volume: {emj} <b>{vol_str}</b>\nNow playing: 🎧 <b>{await get_media_info()}</b>\n\n<i>/media</i> • <i>last update {datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")}</i>"""
+            return f"""Now playing: 🎧 <b>{await get_media_info()}</b>\nCurrent volume: {emj} <b>{vol_str}</b>\n\n<i>/media</i> • <i>last update {datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")}</i>"""
 
         msg = await self.bot.send_message(message.from_user.id, await get_text(), reply_markup=markup,
                                           parse_mode='HTML')
@@ -150,13 +157,14 @@ class Commands:
                     return
                 await asyncio.sleep(5)
 
-        return
         # Thread(target=asyncio.run, args=(do(),)).start()
 
     def setup(self, dp: Dispatcher):
         dp.register_message_handler(self.start, content_types=['text'], state='*', commands=['start'])
-        dp.register_callback_query_handler(self.callbacks, state='*')
+        dp.register_callback_query_handler(self.callbacks, IsAllowed(), state='*')
         dp.register_message_handler(self.screenshot, IsAllowed(), content_types=['text'], state='*',
                                     commands=['screenshot', 'ss', 'sc', 'screen', 'sh'])
+        dp.register_message_handler(self.lock, IsAllowed(), content_types=['text'], state='*',
+                                    commands=['l', 'lock'])
         dp.register_message_handler(self.media_control, IsAllowed(), content_types=['text'], state='*',
-                                    commands=['media', 'mc', 'music'])
+                                    commands=['media', 'mc', 'music', 'video', 'current', 'm'])
