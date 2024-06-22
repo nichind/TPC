@@ -27,6 +27,7 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from comtypes import CLSCTX_ALL
 from ctypes import cast, POINTER
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
+from .notifications import notify
 
 
 class IsAllowed(BoundFilter):
@@ -83,15 +84,18 @@ class Commands:
             await call.answer(text='✅', show_alert=False)
 
     async def screenshot(self, message: Message, state: FSMContext):
-        await message.delete()
-        date = str(datetime.datetime.now().timestamp()).split(".")[0]
-        ss = mss().shot(mon=-1, output=f'./data/screenshots/{date}.png')
-        await message.answer_photo(photo=open(ss, 'rb'),
-                                   caption=f'''Took this screenshot at 📅 {datetime.datetime.now().strftime("<code>%d/%m/%Y</code>, <code>%H:%M:%S</code>")}\n\n<i>/screenshot</i>''',
-                                   parse_mode='HTML',
-                                   reply_markup=InlineKeyboardMarkup().row(
-                                       InlineKeyboardButton(text='Send as file (full quality)',
-                                                            callback_data=f'ss:{date}')))
+        try:
+            await message.delete()
+            date = str(datetime.datetime.now().timestamp()).split(".")[0]
+            ss = mss().shot(mon=-1, output=f'./data/screenshots/{date}.png')
+            await message.answer_photo(photo=open(ss, 'rb'),
+                                       caption=f'''Took this screenshot at 📅 {datetime.datetime.now().strftime("<code>%d/%m/%Y</code>, <code>%H:%M:%S</code>")}\n\n<i>/screenshot</i>''',
+                                       parse_mode='HTML',
+                                       reply_markup=InlineKeyboardMarkup().row(
+                                           InlineKeyboardButton(text='Send as file (full quality)',
+                                                                callback_data=f'ss:{date}')))
+        except Exception as e:
+            notify(str(e))
 
     async def lock(self, message: Message, state: FSMContext):
         await message.delete()
