@@ -37,7 +37,7 @@ if __name__ == '__main__':
                     self.thread = None
                     Commands(tray=tray, token=settings.bot_token).setup(self.dp)
                     break
-                except aiogram.utils.exceptions.ValidationError:
+                except:
                     SettingsManagement.update(1, bot_token=Ask(settings.bot_token, 'TPC', 'Bot token').fancy(False))
             self.connected = False
             self.want_connection = True
