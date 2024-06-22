@@ -32,16 +32,13 @@ if __name__ == '__main__':
             while True:
                 try:
                     settings = SettingsManagement.get(1)
-                    if settings.bot_token is None:
-                        SettingsManagement.update(1, bot_token=Ask('bot_token', 'TPC', 'Bot token').fancy(False))
-                        settings = SettingsManagement.get(1)
                     self.bot = Bot(settings.bot_token)
                     self.dp = Dispatcher(self.bot, storage=MemoryStorage())
                     self.thread = None
                     Commands(tray=tray, token=settings.bot_token).setup(self.dp)
                     break
                 except:
-                    SettingsManagement.update(1, bot_token=Ask('bot_token', 'TPC', 'Bot token').fancy(False))
+                    SettingsManagement.update(1, bot_token=Ask('', 'TPC', 'Bot token').fancy(False))
             self.connected = False
             self.want_connection = True
 
