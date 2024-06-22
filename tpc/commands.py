@@ -3,10 +3,12 @@ import ctypes
 import datetime
 import random
 import time
+import io
 from threading import Thread
 import psutil
 import aiogram.utils.exceptions
 import pystray
+import winsdk.windows.storage
 from aiogram import types
 from aiogram import Bot, Dispatcher, executor
 from aiogram.types import Message, CallbackQuery, BotCommand
@@ -33,10 +35,6 @@ class IsAllowed(BoundFilter):
         return user.access
 
 
-class States(StatesGroup):
-    captcha_solving = State()
-
-
 class Commands:
     def __init__(self, tray: pystray.Icon, token: str):
         self.tray = tray
@@ -45,15 +43,17 @@ class Commands:
     async def start(self, message: Message, state: FSMContext):
         await message.delete()
         await message.bot.set_my_commands(
-            [BotCommand('start', 'Main menu'),
+            [BotCommand('start', 'Main menu (pc stats, tpc usage)'),
              BotCommand('screenshot', 'Get desktop screenshot'),
-             BotCommand('media', 'Control media')])
-        user = await UserManagement.get(user_obj=message.from_user, user_id=message.from_user.id)
-        if ' ' in message.text and user.access == False:
-            if message.text.split(' ')[-1] == os.getenv('PASS'):
+             BotCommand('lock', 'Lock computer (WIN+L)'),
+             BotCommand('media', 'Control media (pause, skip, mute, etc.)')])
+
+        if ' ' in message.text:
+            if message.text.split(' ')[-1] == SettingsManagement.get(1).password:
                 await UserManagement.update(user_id=message.from_user.id, access=True)
-                user = await UserManagement.get(user_id=message.from_user.id)
-        if user.access is False: return
+        user = await UserManagement.get(user_id=message.from_user.id)
+        if user.access is False:
+            return
 
         stats = f"""Hello, {message.from_user.full_name}\n📅 {datetime.datetime.now().strftime("<code>%d/%m/%Y</code>, <code>%H:%M:%S</code>")}"""
         stats += f"""\n\n<b>💻 Stats:</b>\n×\tCPU: <code>{psutil.cpu_percent()}%</code>\n×\tRAM: <code>{(psutil.virtual_memory().used // 1e+9)}GB</code>/<code>{(psutil.virtual_memory().total // 1e+9)}GB</code> (<code>{psutil.virtual_memory().percent}%</code>)"""
@@ -78,11 +78,12 @@ class Commands:
                     keyboard.press(KeyCode.from_vk(int(key, 0)))
             else:
                 keyboard.press(KeyCode.from_vk(int(call.data.split(':')[-1], 0)))
+            if call.data.split(':')[1] == 'edit':
+                await self.media_control(call.message, state, call.message, call.from_user.id)
             await call.answer(text='✅', show_alert=False)
 
     async def screenshot(self, message: Message, state: FSMContext):
         await message.delete()
-
         date = str(datetime.datetime.now().timestamp()).split(".")[0]
         ss = mss().shot(mon=-1, output=f'./data/screenshots/{date}.png')
         await message.answer_photo(photo=open(ss, 'rb'),
@@ -99,16 +100,18 @@ class Commands:
             f'🔒 Successfully locked your PC (WIN+L) at {datetime.datetime.now().strftime("<code>%d/%m/%Y</code>, <code>%H:%M:%S</code>")}',
             parse_mode='HTML')
 
-    async def media_control(self, message: Message, state: FSMContext):
-        await message.delete()
+    async def media_control(self, message: Message, state: FSMContext, message_obj: Message = None,
+                            author_id: int = None):
+        if message_obj is None:
+            await message.delete()
 
         markup = InlineKeyboardMarkup(row_width=3)
-        markup.row(InlineKeyboardButton(text='⏮️ Previous', callback_data='press:0xB1'),
-                   InlineKeyboardButton(text='⏯️ Play/Pause', callback_data='press:0xB3'),
-                   InlineKeyboardButton(text='⏭️ Next', callback_data='press:0xB0'))
-        markup.row(InlineKeyboardButton(text='🔉 Volume down', callback_data='press:0xAE'),
-                   InlineKeyboardButton(text='🔇 Mute/Unmute', callback_data='press:0xAD'),
-                   InlineKeyboardButton(text='🔊 Volume up', callback_data='press:0xAF'))
+        markup.row(InlineKeyboardButton(text='⏮️ Previous', callback_data='press:edit:0xB1'),
+                   InlineKeyboardButton(text='⏯️ Play/Pause', callback_data='press:edit:0xB3'),
+                   InlineKeyboardButton(text='⏭️ Next', callback_data='press:edit:0xB0'))
+        markup.row(InlineKeyboardButton(text='🔉 Volume down', callback_data='press:edit:0xAE'),
+                   InlineKeyboardButton(text='🔇 Mute/Unmute', callback_data='press:edit:0xAD'),
+                   InlineKeyboardButton(text='🔊 Volume up', callback_data='press:edit:0xAF'))
 
         async def get_text():
             # Current volume
@@ -137,25 +140,36 @@ class Commands:
 
                     info_dict['genres'] = list(info_dict['genres'])
 
+                    info_dict['thumbnail']: winsdk.windows.storage.streams.IRandomAccessStreamReference
+
                     return f'{info_dict["artist"]} — {info_dict["title"]}'
                 return f'<i>Nothing</i>'
 
-            return f"""Now playing: 🎧 <b>{await get_media_info()}</b>\nCurrent volume: {emj} <b>{vol_str}</b>\n\n<i>/media</i> • <i>last update {datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")}</i>"""
+            return f"""(\t{emj} <b>{vol_str}</b>)\t🎧 <b>{await get_media_info()}</b>\n\n<i>/media</i> • <i>{datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")}{" updated" if message_obj else ""}</i>"""
 
-        msg = await self.bot.send_message(message.from_user.id, await get_text(), reply_markup=markup,
-                                          parse_mode='HTML')
-
-        async def do():
-            bot = Bot(SettingsManagement.get(1).bot_token)
-            while True:
+        if message_obj:
+            text = await get_text()
+            if text != message_obj.text:
                 try:
-                    await bot.edit_message_text(await get_text(), msg.chat.id, msg.message_id, reply_markup=markup,
-                                                parse_mode='HTML')
+                    return await self.bot.edit_message_text(chat_id=author_id, message_id=message_obj.message_id,
+                                                            text=text, reply_markup=markup, parse_mode='HTML')
                 except aiogram.utils.exceptions.MessageNotModified:
                     pass
-                except:
-                    return
-                await asyncio.sleep(5)
+        else:
+            await self.bot.send_message(message.from_user.id, await get_text(), reply_markup=markup,
+                                        parse_mode='HTML')
+
+        # async def do():
+        #     bot = Bot(SettingsManagement.get(1).bot_token)
+        #     while True:
+        #         try:
+        #             await bot.edit_message_text(await get_text(), msg.chat.id, msg.message_id, reply_markup=markup,
+        #                                         parse_mode='HTML')
+        #         except aiogram.utils.exceptions.MessageNotModified:
+        #             pass
+        #         except:
+        #             return
+        #         await asyncio.sleep(5)
 
         # Thread(target=asyncio.run, args=(do(),)).start()
 

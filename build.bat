@@ -24,6 +24,6 @@ python -m pip install winsdk
 python -m pip install sv-ttk
 python -m pip install plyer
 python -m pip install psutil
-python -m PyInstaller --onefile --windowed --noconsole --hidden-import plyer.platforms.win.notification --copy-metadata magic_filter -F --paths=%~dp0.venv\Lib\site-packages --icon=ico.gif --name=TPCC .\main.py
+python -m PyInstaller --onefile --windowed --noconsole --hidden-import plyer.platforms.win.notification --copy-metadata magic_filter -F --paths=%~dp0.venv\Lib\site-packages --icon=ico.gif --name=TPC .\main.py
 
 pause

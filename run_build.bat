@@ -1,3 +1,3 @@
 cd %~dp0
-start dist\TPCC.exe
+start dist\TPC.exe
 exit

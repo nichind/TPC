@@ -35,7 +35,7 @@ class App:
         menu.controls.append(ft.TextButton(text='Logs'))
         menu.controls.append(ft.TextButton(text='Links'))
 
-        left.controls.append(ft.Text("TPCC", size=22))
+        left.controls.append(ft.Text("TPC", size=22))
         left.controls.append(menu)
 
         self.page.add(left)

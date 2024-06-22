@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func
 
-engine = create_engine(f'sqlite:///{os.getcwd()}/tpcc.sqlite?check_same_thread=False')
+engine = create_engine(f'sqlite:///{os.getcwd()}/tpc.sqlite?check_same_thread=False')
 Base = declarative_base()
 
 

@@ -14,13 +14,13 @@ import io
 import webbrowser
 
 
-def ask(current_value: str = '', title: str = ' TPCC', prompt: str = '') -> str:
+def ask(current_value: str = '', title: str = ' TPC', prompt: str = '') -> str:
     token = simpledialog.askstring(title, prompt, initialvalue=current_value)
     return token
 
 
 class Ask:
-    def __init__(self, current_value: str = '', title: str = ' TPCC', prompt: str = ''):
+    def __init__(self, current_value: str = '', title: str = ' TPC', prompt: str = ''):
         self.current_value = current_value
         self.title = title
         self.prompt = prompt
@@ -45,7 +45,7 @@ class Ask:
         send = ttk.Button(text='Ok', command=_return)
         send.pack(pady=12)
 
-        sv_ttk.set_theme("dark")
+        # sv_ttk.set_theme("dark")
         root.mainloop()
 
         if self.result == f'''{"*" * (len(self.current_value) - 2)}{self.current_value[-3:-1]}''':
@@ -55,7 +55,7 @@ class Ask:
 
 class App:
     def __init__(self, *args):
-        self.title = ' TPCC'
+        self.title = ' TPC'
         self.geometry = '350x230'
         self.current_page = 'main'
         self.root = tk.Tk(className=self.title)
@@ -94,12 +94,12 @@ class App:
         def add_to_boot():
             file_path = os.getcwd()
             bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup' % username
-            with open(bat_path + '\\' + "tpcc.bat", "w+") as bat_file:
+            with open(bat_path + '\\' + "tpc.bat", "w+") as bat_file:
                 bat_file.write(r'start /MIN "" %s' % f'{file_path}/run_build.bat')
             self.settings()
 
         def remove_from_boot():
-            os.remove(r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tpcc.bat' % username)
+            os.remove(r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tpc.bat' % username)
             self.settings()
 
         settings = SettingsManagement.get(1)
@@ -116,13 +116,13 @@ class App:
         password_title = ttk.Label(self.root, text="Bot password")
         password_title.grid(row=3, column=0, sticky="W", padx=8, pady=8)
         password_entry = ttk.Entry(self.root)
-        password_entry.insert(0, string=f'''{"*" * (len(settings.password) - 2)}{settings.password[-3:-1]}''')
+        password_entry.insert(0, string=f'''{"*" * (len(settings.password) - 2)}{settings.password[-2:]}''')
         password_entry.grid(row=4, column=0, padx=8)
 
         apply_password = ttk.Button(text='Apply', command=change_password)
         apply_password.grid(row=4, column=1)
 
-        if Path(r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tpcc.bat' % username).is_file():
+        if Path(r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tpc.bat' % username).is_file():
             boot_button = ttk.Button(text='remove from Win boot', command=remove_from_boot)
         else:
             boot_button = ttk.Button(text='add to Win boot', command=add_to_boot)
@@ -156,11 +156,11 @@ class App:
 
     def main(self):
         self.clear()
-        title = ttk.Label(self.root, text='TPCC', font=('', 24))
+        title = ttk.Label(self.root, text='TPC', font=('', 24))
         title.pack(side='top', pady=12)
         desc = ttk.Label(self.root, text='discord.gg/nichind\n    t.me/nichindpf', font=('', 12))
         desc.pack(side='top', pady=0)
-        settings = ttk.Button(text='Settings', command=self.settings)
+        settings = ttk.Button(text='Settings', command=self.settings, width=10)
         settings.place(anchor='center', relx=.4, rely=.7)
-        links = ttk.Button(text='Links', command=self.links)
+        links = ttk.Button(text='Links', command=self.links, width=10)
         links.place(anchor='center', relx=.6, rely=.7)

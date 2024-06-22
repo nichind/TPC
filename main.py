@@ -1,9 +1,7 @@
 import asyncio
-import os
-import random
 import time
 import aiogram.utils.exceptions
-from tpcc import *
+from tpc import *
 import pystray
 from PIL import Image
 from dotenv import load_dotenv
@@ -26,7 +24,7 @@ if __name__ == '__main__':
     if settings.password == 'strong-password':
         SettingsManagement.update(1, password=Ask('', 'TPCC', 'Enter preferred bot password').fancy())
 
-    tray = pystray.Icon('TPCC', Image.open('./ico.gif'), "@nichindpf")
+    tray = pystray.Icon('TPC', Image.open('./ico.gif'), "@nichindpf")
 
 
     class AiogramBot:
@@ -40,7 +38,7 @@ if __name__ == '__main__':
                     Commands(tray=tray, token=settings.bot_token).setup(self.dp)
                     break
                 except aiogram.utils.exceptions.ValidationError:
-                    SettingsManagement.update(1, bot_token=Ask(settings.bot_token, 'TPCC', 'Bot token').fancy(False))
+                    SettingsManagement.update(1, bot_token=Ask(settings.bot_token, 'TPC', 'Bot token').fancy(False))
             self.connected = False
             self.want_connection = True
 
@@ -60,5 +58,5 @@ if __name__ == '__main__':
     Thread(target=cycle, args=(tray, 'ico.gif')).start()
     Thread(target=tray.run).start()
 
-    notify(f'Started (connected as @{asyncio.run(tg_bot.bot.get_me())["username"]})', 'TPCC')
+    notify(f'Started (connected as @{asyncio.run(tg_bot.bot.get_me())["username"]})')
     Run().go(tg_bot)
