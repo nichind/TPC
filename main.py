@@ -32,6 +32,9 @@ if __name__ == '__main__':
             while True:
                 try:
                     settings = SettingsManagement.get(1)
+                    if settings.bot_token is None:
+                        SettingsManagement.update(1, bot_token=Ask(settings.bot_token, 'TPC', 'Bot token').fancy(False))
+                        settings = SettingsManagement.get(1)
                     self.bot = Bot(settings.bot_token)
                     self.dp = Dispatcher(self.bot, storage=MemoryStorage())
                     self.thread = None
