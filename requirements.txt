@@ -1,0 +1,7 @@
+aiogram
+aiosqlite
+sqlalchemy[asyncio]
+loguru
+mss
+plyer
+pystray
