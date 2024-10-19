@@ -1,5 +1,7 @@
+import os
 from core import *
-from asyncio import new_event_loop, gather
+from asyncio import new_event_loop, gather, run, get_event_loop
+from threading import Thread
 from platform import system
 from os.path import dirname, basename, isfile, join
 from glob import glob
@@ -10,11 +12,17 @@ class TPC:
         pass
     
     name = 'tpc'
-    icon = './ico.svg'
+    icon_path = './assets/ico.gif'
+    icon = None
     
     system = system().lower()
     pc_handlers = PCHandlers()
     tray = None
+    
+    def exit(self):
+        if self.tray:
+            self.pc_handlers.notify('TPC', 'Bye-bye!')
+        os._exit(0)
 
 
 if __name__ == '__main__':
@@ -34,14 +42,12 @@ if __name__ == '__main__':
     
     tasks = []
     loop = new_event_loop()
-    
-    tpc.tray = Tray(tpc)
-    tpc.icon = tpc.icon
-    
+
+    tpc.tray = Tray(tpc)    
     tpc.on_startup = loop.create_task(on_startup())
-    tasks.append(loop.create_task(tpc.pc_handlers.notify('TPC', 'TPC started!')))
-    tpc.tray.animate = loop.create_task(tpc.tray.animate())
     tpc.tray.run_task = loop.create_task(tpc.tray.run())
-    tasks += [tpc.on_startup, tpc.tray.animate, tpc.tray.run_task]
+    Thread(target=run, args=(tpc.tray.animate(),)).start()
+    tasks += [tpc.on_startup, tpc.tray.run_task]
+    tpc.pc_handlers.notify('TPC', 'TPC started!')
     loop.run_until_complete(gather(*tasks))
     

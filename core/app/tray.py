@@ -43,13 +43,9 @@ class SystemTrayIcon(QSystemTrayIcon):
     def on_exit_click(self):
         self.fire_exit_click()
         print("Exit clicked")
-        exit(0)
+        
 
     def on_icon_click(self, reason):
-        # if reason == self.DoubleClick:
-        #     print("Icon clicked, changing icon")
-        #     # newicon = QIcon("ico.svg")
-        #     self.setIcon(QIcon("ico.svg"))
         if reason == self.Trigger:
             if self.is_actived:
                 self.is_actived = False
@@ -92,18 +88,17 @@ class Tray:
 
     def on_exit_click(self, sender):
         self.fire_exit_app()
+        self.tpc.exit()
 
-    async def animate(self, frame_delay: float = 0.5):
+    async def animate(self, frame_delay: float = 0.08):
         while True:
             with Image.open(self.icon_path) as im:
                 for i in range(im.n_frames):
-                    print(i)
                     im.seek(i)
-                    print(im)
                     self._icon.setIcon(QPixmap(ImageQt(im)))
-                    print(self._icon)
+                    self.tpc.icon = im
                     await sleep(frame_delay)
 
     async def run(self):
-        Thread(target=self._app.exec).start()
+        self._app.exec()
         
