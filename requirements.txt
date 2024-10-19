@@ -4,4 +4,5 @@ sqlalchemy[asyncio]
 loguru
 mss
 plyer
-pystray
+PySide6
+PIL
