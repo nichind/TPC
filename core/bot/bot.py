@@ -7,13 +7,13 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.exceptions import *
 from json import load
 from loguru import logger
-from glob import glob
+from glob import globt
 from os.path import dirname, basename, isfile, join, isdir
 from os import listdir
 import asyncio
 
 
-async def create_dp(token: str):
+async def create_dp(token: str, tpc):
     cfg = load(open('./config.json', 'r', encoding='utf-8'))
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -50,4 +50,5 @@ async def create_dp(token: str):
         logger.error(f"Invalid token: {token}")
         await bot.session.close()
         return
+    bot.tpc = tpc
     return dp.start_polling(bot)

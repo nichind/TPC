@@ -1,5 +1,4 @@
 .venv/
-/core/database
 *.pyc
 *.sqlite
 __pychache__/
