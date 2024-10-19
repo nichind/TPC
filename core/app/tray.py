@@ -3,6 +3,7 @@ from threading import Thread
 from PIL import Image
 from PIL.ImageQt import ImageQt
 import sys
+from datetime import datetime
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import QSystemTrayIcon, QApplication, QWidget, QMenu
 
@@ -46,15 +47,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         
 
     def on_icon_click(self, reason):
-        if reason == self.Trigger:
-            if self.is_actived:
-                self.is_actived = False
-                print("Is Off")
-                self.setIcon(QIcon("ico.svg"))
-            else:
-                self.is_actived = True
-                print("Is On")
-                self.setIcon(QIcon("ico.svg"))
+        print(reason)
 
     def fire_play_click(self):
         if self.event_play_click:
@@ -90,14 +83,22 @@ class Tray:
         self.fire_exit_app()
         self.tpc.exit()
 
-    async def animate(self, frame_delay: float = 0.08):
+    async def animate(self):
+        frames = []
+        with Image.open(self.icon_path) as im:
+            for i in range(im.n_frames):
+                if i == 0:
+                    continue
+                im.seek(i)
+                frames += [im.copy()]
+        frame_delay = (im.info['duration'] / im.n_frames)
         while True:
-            with Image.open(self.icon_path) as im:
-                for i in range(im.n_frames):
-                    im.seek(i)
-                    self._icon.setIcon(QPixmap(ImageQt(im)))
-                    self.tpc.icon = im
-                    await sleep(frame_delay)
+            print(im.n_frames, im.info['duration'])
+            for i, frame in enumerate(frames):
+                self._icon.setIcon(QPixmap(ImageQt(frame)))
+                last_frame_at = datetime.now()
+                self.tpc.icon = frame
+                await sleep(((frame_delay - (datetime.now() - last_frame_at).total_seconds()) * 0.01) - 0.15)
 
     async def run(self):
         self._app.exec()
