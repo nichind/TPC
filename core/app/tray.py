@@ -71,7 +71,7 @@ class Tray:
         self._app = QApplication(sys.argv)
         self._widget = QWidget()
         with Image.open(self.icon_path) as im:
-            im.seek(0)
+            im.seek(0 if im.n_frames == 1 else 1)
             self._icon = SystemTrayIcon(QIcon(QPixmap(ImageQt(im))), self._widget)
         self._icon.event_exit_click = self.on_exit_click        
 

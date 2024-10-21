@@ -11,6 +11,11 @@ class TPC:
     class PCHandlers:
         pass
     
+    class Tasks:
+        on_startup = None
+        run = None
+    
+    tasks = Tasks()
     name = 'tpc'
     icon_path = './assets/ico.gif'
     icon = None
@@ -18,6 +23,7 @@ class TPC:
     system = system().lower()
     pc_handlers = PCHandlers()
     tray = None
+    loop = get_event_loop()
     
     def exit(self):
         if self.tray:
@@ -40,14 +46,13 @@ if __name__ == '__main__':
                 continue
             setattr(tpc.pc_handlers, attr, getattr(handler.PCHandlers(tpc), attr))
     
-    tasks = []
-    loop = new_event_loop()
-
+    loop = tpc.loop
     tpc.tray = Tray(tpc)    
-    tpc.on_startup = loop.create_task(on_startup())
-    tpc.tray.run_task = loop.create_task(tpc.tray.run())
-    Thread(target=run, args=(tpc.tray.animate(),)).start()
-    tasks += [tpc.on_startup, tpc.tray.run_task]
+    tpc.tasks.on_startup = loop.create_task(on_startup())
+    tpc.tasks.run = loop.create_task(tpc.tray.run())
+    tasks = [x for x in dir(tpc.tasks) if not x.startswith('__') and x is not None]
+    tasks = [tpc.tasks.__dict__[x] for x in tasks]
+    # Thread(target=run, args=(tpc.tray.animate(),)).start()
     tpc.pc_handlers.notify('TPC', 'TPC started!')
     loop.run_until_complete(gather(*tasks))
     
