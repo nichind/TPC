@@ -1,29 +1,28 @@
 import os
 from core import *
-from asyncio import new_event_loop, gather, run, get_event_loop
+from asyncio import new_event_loop, gather, run, get_event_loop, set_event_loop
 from threading import Thread
 from platform import system
 from os.path import dirname, basename, isfile, join
 from glob import glob
+from loguru import logger
 
 
 class TPC:
     class PCHandlers:
         pass
     
-    class Tasks:
-        on_startup = None
-        run = None
-    
-    tasks = Tasks()
+    tasks = {}
     name = 'tpc'
     icon_path = './assets/ico.gif'
     icon = None
     
     system = system().lower()
     pc_handlers = PCHandlers()
+    setup_hook = None
     tray = None
-    loop = get_event_loop()
+    loop = None
+    logger = logger
     
     def exit(self):
         if self.tray:
@@ -31,8 +30,9 @@ class TPC:
         os._exit(0)
 
 
-if __name__ == '__main__':
+def main():
     tpc = TPC()
+    tpc.tray = Tray(tpc)
     
     module = glob(join(dirname(__file__) + '/core/pc', "*.py"))
     __all__ = [basename(f)[:-3] for f in module if isfile(f) and not f.endswith('__init__.py')]
@@ -46,13 +46,13 @@ if __name__ == '__main__':
                 continue
             setattr(tpc.pc_handlers, attr, getattr(handler.PCHandlers(tpc), attr))
     
-    loop = tpc.loop
-    tpc.tray = Tray(tpc)    
-    tpc.tasks.on_startup = loop.create_task(on_startup())
-    tpc.tasks.run = loop.create_task(tpc.tray.run())
-    tasks = [x for x in dir(tpc.tasks) if not x.startswith('__') and x is not None]
-    tasks = [tpc.tasks.__dict__[x] for x in tasks]
-    # Thread(target=run, args=(tpc.tray.animate(),)).start()
-    tpc.pc_handlers.notify('TPC', 'TPC started!')
-    loop.run_until_complete(gather(*tasks))
+    loop = new_event_loop()    
+    set_event_loop(loop)
+    tpc.loop = loop
+    tpc.setup_hook = setup_hook
+    tpc.tray.run()
+
+
+if __name__ == '__main__':
+    main()
     

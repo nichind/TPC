@@ -1,2 +1,2 @@
-from .on_startup import on_startup
+from .setup_hook import setup_hook
 from .database import Setting

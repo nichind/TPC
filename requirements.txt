@@ -5,4 +5,5 @@ loguru
 mss
 plyer
 PySide6
-PIL
+PILLOW
+loguru
