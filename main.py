@@ -1,6 +1,7 @@
 import os
+import sys
 from core import *
-from asyncio import new_event_loop, gather, run, get_event_loop, set_event_loop
+from asyncio import new_event_loop, gather, run, get_event_loop, set_event_loop, sleep
 from threading import Thread
 from platform import system
 from os.path import dirname, basename, isfile, join
@@ -22,15 +23,28 @@ class TPC:
     setup_hook = None
     tray = None
     loop = None
+    bot = None
     logger = logger
+    
+    logger.info('Loading translations')
+    
+    translator = Translator()
+    tl = translator.tl
+    translator.chache_translations()
+    
+    logger.info('Created TPC instance')
     
     def exit(self):
         if self.tray:
             self.pc_handlers.notify('TPC', 'Bye-bye!')
         os._exit(0)
 
+    def restart(self):
+        os.execl(sys.executable, sys.executable, *sys.argv)
+        os._exit(-1)
 
-def main():
+
+if __name__ == '__main__':
     tpc = TPC()
     tpc.tray = Tray(tpc)
     
@@ -51,8 +65,3 @@ def main():
     tpc.loop = loop
     tpc.setup_hook = setup_hook
     tpc.tray.run()
-
-
-if __name__ == '__main__':
-    main()
-    

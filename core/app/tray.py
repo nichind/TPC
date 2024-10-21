@@ -9,7 +9,8 @@ from PySide6.QtWidgets import QSystemTrayIcon, QApplication, QWidget, QMenu
 
 
 class SystemTrayIcon(QSystemTrayIcon):
-    def __init__(self, icon, parent=None):
+    def __init__(self, icon, tpc, parent=None):
+        self.tpc = tpc
         self.event_play_click = None
         self.event_pause_click = None
         self.event_exit_click = None
@@ -21,28 +22,14 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.setIcon(icon)
 
         menu = QMenu(parent)
-        self._play_action = menu.addAction("Play", self.on_play_click)
-        self._pause_action = menu.addAction("Pause", self.on_pause_click)
         menu.addSeparator()
-        self._exit_action = menu.addAction("Exit", self.on_exit_click)
+        self._restart_action = menu.addAction(tpc.tl("TRAY_RESTART"), self.tpc.restart)
+        self._exit_action = menu.addAction(tpc.tl("TRAY_EXIT"), self.tpc.exit)
 
         self.setContextMenu(menu)
 
         self.activated.connect(self.on_icon_click)
         self.show()
-
-    def on_play_click(self):
-        self.fire_play_click()
-        print("Play clicked")
-
-    def on_pause_click(self):
-        self.fire_pause_click()
-        print("Pause clicked")
-
-    def on_exit_click(self):
-        self.fire_exit_click()
-        print("Exit clicked")
-        
 
     def on_icon_click(self, reason):
         print(reason)
@@ -70,7 +57,7 @@ class Tray:
         self._widget = QWidget()
         with Image.open(self.icon_path) as im:
             im.seek(0 if im.n_frames == 1 else 1)
-            self._icon = SystemTrayIcon(QIcon(QPixmap(ImageQt(im))), self._widget)
+            self._icon = SystemTrayIcon(QIcon(QPixmap(ImageQt(im))), self.tpc, self._widget)
         self._icon.event_exit_click = self.on_exit_click        
 
     def fire_exit_app(self):
@@ -109,7 +96,6 @@ class Tray:
                 frames += [im.copy()]
         frame_delay = (im.info['duration'] / im.n_frames)
         while True:
-            print(im.n_frames, im.info['duration'])
             for i, frame in enumerate(frames):
                 self._icon.setIcon(QPixmap(ImageQt(frame)))
                 last_frame_at = datetime.now()
@@ -124,7 +110,7 @@ class Tray:
         the application event loop.
         """
         self.tpc.pc_handlers.notify('TPC', 'TPC started!')
-        self.run_task_in_main_thread(self.tpc.setup_hook(self.tpc))
+        self.run_in_loop(self.tpc.setup_hook(self.tpc))
         Thread(target=self.run_in_loop, args=(self.animate(),)).start()
         self._app.exec_()
         

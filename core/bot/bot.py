@@ -6,8 +6,7 @@ from aiogram.types import BotCommand
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.exceptions import *
 from json import load
-from loguru import logger
-from glob import globt
+from glob import glob
 from os.path import dirname, basename, isfile, join, isdir
 from os import listdir
 import asyncio
@@ -21,9 +20,10 @@ async def create_dp(token: str, tpc):
     try:
         bot = Bot(token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     except TokenValidationError:
-        return logger.error(f"Invalid token: {token}")
+        return tpc.logger.error(f"Invalid token: {token}")
 
-    bot.logger = logger
+    bot.logger = tpc.logger
+    bot.tpc = tpc
 
     dp = Dispatcher(storage=MemoryStorage())
     try:
@@ -31,7 +31,7 @@ async def create_dp(token: str, tpc):
             [BotCommand(command=command['name'], description=command['description']) for command in cfg['commands']]
         )
     except Exception as exc:
-        logger.error(f'Failed to set bot commands: {exc}')
+        tpc.logger.error(f'Failed to set bot commands: {exc}')
 
     for folder in listdir(dirname(__file__) + '/core'):
         if isdir(dirname(__file__) + '/core/' + folder) and folder not in ['__pycache__', 'utils', 'other']:
@@ -43,12 +43,12 @@ async def create_dp(token: str, tpc):
                 try:
                     handler.CurrentInst(bot).setup(dp)
                 except AttributeError:
-                    logger.error(f"Handler {folder}/{file} has no CurrentInst class or setup method in it, skipping it")
+                    tpc.logger.error(f"Handler {folder}/{file} has no CurrentInst class or setup method in it, skipping it")
     try:
-        logger.success(f"Created Dispatcher for @{(await bot.get_me()).username}, starting polling...")
+        tpc.logger.success(f"Created Dispatcher for @{(await bot.get_me()).username}, starting polling...")
     except TelegramUnauthorizedError:
-        logger.error(f"Invalid token: {token}")
+        tpc.logger.error(f"Invalid token: {token}")
         await bot.session.close()
         return
-    bot.tpc = tpc
+    tpc.bot = bot
     return dp.start_polling(bot)

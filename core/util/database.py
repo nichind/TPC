@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from asyncio import get_event_loop, new_event_loop
-from typing import Self, List
+from typing import Self
 
 
 engine = create_async_engine('sqlite+aiosqlite:///./tpc.sqlite?check_same_thread=False')
@@ -16,10 +16,10 @@ class Setting(Base):
     __tablename__: str = 'settings'
 
     key = Column(String, primary_key=True)
-    value = Column(JSON)
+    value = Column(String)
 
     def __repr__(self):
-        return f'<Setting({self.key}={self.value})>'
+        return f'<Setting("{self.key}" = "{self.value}")>'
 
     @classmethod
     async def add(cls, **kwargs) -> bool:
@@ -41,17 +41,12 @@ class Setting(Base):
         return setting
 
     @classmethod
-    async def get_all(cls, **kwargs) -> List[Self]:
+    async def update(cls, key: str, value: str) -> Self:
         async with async_session() as session:
-            settings = (await session.execute(select(Setting).filter_by(**kwargs))).scalars().all()
-        return settings
-
-    @classmethod
-    async def update(cls, key: str, **kwargs) -> Self:
-        async with async_session() as session:
-            setting = await cls.get(key=key)
-            for key, value in kwargs.items():
-                setattr(setting, key, value)
+            setting = (await session.execute(select(Setting).filter_by(key=key))).scalar()
+            if setting is None:
+                setting = await cls.add(key=key, value=value)
+            setattr(setting, 'value', value)
             await session.commit()
         return await cls.get(key=key)
     
