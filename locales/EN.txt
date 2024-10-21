@@ -1,3 +1,4 @@
+TRAY_TITLE=TPC commit #{version}
 TRAY_RESTART=Restart
 TRAY_EXIT=Exit
 TRAY_BOT=Bot
@@ -5,9 +6,7 @@ TRAY_SETTING_BOT_LOGGED=Logged in as @{username}
 TRAY_SETTING_BOT_NOTLOGGED=Not logged
 TRAY_SETTING_BOT_CHANGETOKEN=Change token
 TRAY_SETTINGS_BOT_RESTART=Restart bot
-
 STARTED_BOT=Bot started!
-STARTED_BOT_TEXT=Connected as {username}
-
+STARTED_BOT_TEXT=Connected as @{username}
 FAILED_START_BOT=Failed to start bot
 INVALID_TOKEN=Invalid token

@@ -116,6 +116,9 @@ class Tray(QObject):
         self._icon.event_exit_click = self.on_exit_click        
         self.tpc.run_in_loop = self.run_in_loop
 
+        # Add title on hover for tray
+        self._icon.setToolTip(self.tpc.tl('TRAY_TITLE').format(version=self.tpc.version))
+        
         self.frame_changed.connect(self._icon.setIcon)
 
         self.frames = []

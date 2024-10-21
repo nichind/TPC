@@ -3,9 +3,9 @@ class PCHandlers:
         pass
     
     @staticmethod
-    def on_startup():
+    async def on_startup():
         pass
 
     @staticmethod
-    def on_shutdown():
+    async def on_shutdown():
         pass

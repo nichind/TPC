@@ -3,12 +3,13 @@ from .database import Setting
 
 
 class Translator:
-    def __init__(self, locales_folder='./locales'):
+    def __init__(self, tpc, locales_folder='./locales'):
         """
         Initialize the Translator object
 
         This method initializes the Translator object by setting an empty dictionary as the tlbook.
         """
+        self.tpc = tpc
         self.tlbook = {}
         self.locales_folder = locales_folder
     
@@ -42,11 +43,14 @@ class Translator:
         with open(getcwd() + f'{self.locales_folder}/{language.upper()}.txt', 'r') as locale:
             for line in locale.readlines():
                 if '=' in line and line.split('=')[0].strip().upper() == key.upper():
-                    return line[line.index('=') + 1:].replace('\\n', '\n').replace('\\t', '\t')
+                    res = line[line.index('=') + 1:].replace('\\n', '\n').replace('\\t', '\t')
+                    if res[-1] == '\n':
+                        res = res[:-1]
+                    return res
         if language.upper() != 'EN':
             return self.translate_string(key, 'EN')
         return key
-            
+       
     def tl(self, key: str, language: str = 'EN') -> str:
         """
         Translate a given key to the given language.
@@ -63,7 +67,7 @@ class Translator:
             If the key is not found in English either, it will return the key as is.
         """
         try:
-            return self.tlbook[language.upper()][key.upper()]
+            return self.tlbook[language.upper()][key.upper()].format(**self.locals())
         except:
             return self.translate_string(key, language)
     

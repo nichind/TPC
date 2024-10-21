@@ -7,11 +7,21 @@ from platform import system
 from os.path import dirname, basename, isfile, join
 from glob import glob
 from loguru import logger
+import subprocess
+
+
+def get_git_revision_short_hash() -> str:
+    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
 
 
 class TPC:
     class PCHandlers:
         pass
+    
+    try:
+        version = get_git_revision_short_hash()
+    except Exception:
+        version = 'unknown'
     
     tasks = {}
     name = 'tpc'
@@ -30,10 +40,6 @@ class TPC:
     
     logger.info('Loading translations')
     
-    translator = Translator()
-    tl = translator.tl
-    translator.chache_translations()
-    
     logger.info('Created TPC instance')
     
     def restart_bot(self):
@@ -44,6 +50,7 @@ class TPC:
         self.bot_loop.run_until_complete(create_dp(self))
 
     def exit(self):
+        self.run_in_loop(self.pc_handlers.on_shutdown)
         if self.tray:
             self.pc_handlers.notify('TPC', 'Bye-bye!')
         os._exit(0)
@@ -55,6 +62,9 @@ class TPC:
 
 if __name__ == '__main__':
     tpc = TPC()
+    tpc.translator = Translator(tpc)
+    tpc.tl = tpc.translator.tl
+    tpc.translator.chache_translations()
     tpc.tray = Tray(tpc)
     
     module = glob(join(dirname(__file__) + '/core/pc', "*.py"))
