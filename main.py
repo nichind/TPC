@@ -24,6 +24,7 @@ class TPC:
     tray = None
     loop = None
     bot = None
+    bot_loop = None
     logger = logger
     
     logger.info('Loading translations')
@@ -33,6 +34,14 @@ class TPC:
     translator.chache_translations()
     
     logger.info('Created TPC instance')
+    
+    def restart_bot(self):
+        self.logger.info('Restarting bot')
+        if self.bot_loop:
+            self.bot_loop.close()
+        self.bot_loop = new_event_loop()
+        self.bot_loop.run_until_complete(create_dp(self))
+
     
     def exit(self):
         if self.tray:
