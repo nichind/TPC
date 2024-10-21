@@ -1,4 +1,4 @@
-from asyncio import sleep, new_event_loop, create_task, gather
+from asyncio import sleep, new_event_loop, create_task, gather, get_event_loop, run_coroutine_threadsafe
 from threading import Thread
 from PIL import Image
 from PIL.ImageQt import ImageQt
@@ -12,30 +12,25 @@ from PySide6.QtWidgets import (
     QWidget
 )
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, Signal, QObject, QTimer
 from webbrowser import open as webopen
 from time import sleep as tsleep
 from .ask import ask
 from ..util import *
 
-
 class SystemTrayIcon(QSystemTrayIcon):
     def __init__(self, icon, tpc, parent=None):
+        super().__init__(icon, parent)
         self.tpc = tpc
         self.event_play_click = None
         self.event_pause_click = None
         self.event_exit_click = None
         self.is_actived = True
 
-        # QSystemTrayIcon.__init__(self, icon, parent)
-        # self.tray = QSystemTrayIcon()
-        QSystemTrayIcon.__init__(self)
-        self.setIcon(icon)
-
         menu = QMenu(parent)
-        
+
         self._bot_menu = menu.addMenu(tpc.tl("TRAY_BOT"))
-        
+
         if tpc.bot:
             bot_info = self._bot_menu.addAction(tpc.tl("TRAY_SETTING_BOT_LOGGED").format(**tpc.bot.chached_me))
             bot_info.triggered.connect(lambda x: webopen("https://t.me/" + tpc.bot.chached_me.username))
@@ -44,35 +39,31 @@ class SystemTrayIcon(QSystemTrayIcon):
         self._bot_menu.addSeparator()
         change_token_action = self._bot_menu.addAction(tpc.tl("TRAY_SETTING_BOT_CHANGETOKEN"))
         change_token_action.triggered.connect(self.change_token)
-        # restart_bot_action = self._bot_menu.addAction(tpc.tl("TRAY_SETTINGS_BOT_RESTART"))
-        # restart_bot_action.triggered.connect(lambda x: Thread(target=self.tpc.restart_bot).start())
-        
+
         menu.addSeparator()
-        
+
         self._restart_action = menu.addAction(tpc.tl("TRAY_RESTART"), self.tpc.restart)
-        self._exit_action = menu.addAction(tpc.tl("TRAY_EXIT"), self.tpc.exit) 
-       
+        self._exit_action = menu.addAction(tpc.tl("TRAY_EXIT"), self.tpc.exit)
+
         self.setContextMenu(menu)
 
         self.activated.connect(self.on_icon_click)
         self.show()
 
-        Thread(target=self.refresh_bot_info).start()
+        self.refresh_timer = QTimer()
+        self.refresh_timer.timeout.connect(self.refresh_bot_info)
+        self.refresh_timer.start(2000)
 
     def refresh_bot_info(self):
-        while True:
-            self._bot_menu.clear()
-            if self.tpc.bot:
-                bot_info = self._bot_menu.addAction(self.tpc.tl("TRAY_SETTING_BOT_LOGGED").format(**self.tpc.bot.chached_me))
-                bot_info.triggered.connect(lambda x: webopen("https://t.me/" + self.tpc.bot.chached_me.username))
-            else:
-                bot_info = self._bot_menu.addAction(self.tpc.tl("TRAY_SETTING_BOT_NOTLOGGED"))
-            self._bot_menu.addSeparator()
-            change_token_action = self._bot_menu.addAction(self.tpc.tl("TRAY_SETTING_BOT_CHANGETOKEN"))
-            change_token_action.triggered.connect(self.change_token)
-            # restart_bot_action = self._bot_menu.addAction(self.tpc.tl("TRAY_SETTINGS_BOT_RESTART"))
-            # restart_bot_action.triggered.connect(lambda x: Thread(target=self.tpc.restart_bot).start())
-            tsleep(5)
+        self._bot_menu.clear()
+        if self.tpc.bot:
+            bot_info = self._bot_menu.addAction(self.tpc.tl("TRAY_SETTING_BOT_LOGGED").format(**self.tpc.bot.chached_me))
+            bot_info.triggered.connect(lambda x: webopen("https://t.me/" + self.tpc.bot.chached_me.username))
+        else:
+            bot_info = self._bot_menu.addAction(self.tpc.tl("TRAY_SETTING_BOT_NOTLOGGED"))
+        self._bot_menu.addSeparator()
+        change_token_action = self._bot_menu.addAction(self.tpc.tl("TRAY_SETTING_BOT_CHANGETOKEN"))
+        change_token_action.triggered.connect(self.change_token)
 
     def change_token(self):
         token = ask(
@@ -81,8 +72,17 @@ class SystemTrayIcon(QSystemTrayIcon):
         )
         if not token:
             return
+        
+        async def stop():
+            loop = get_event_loop()
+            loop.stop()
+        
         self.tpc.run_in_loop(Setting.update(key='bot_token', value=token))
-        self.tpc.run_in_loop(self.tpc.restart_bot())
+        if self.tpc.bot_thread.is_alive():       
+            run_coroutine_threadsafe(stop(), self.tpc.bot_loop)
+            self.tpc.bot_loop = None
+        self.tpc.bot_thread = Thread(target=self.tpc.restart_bot)
+        self.tpc.bot_thread.start()
 
     def on_icon_click(self, reason):
         print(reason)
@@ -98,10 +98,12 @@ class SystemTrayIcon(QSystemTrayIcon):
     def fire_exit_click(self):
         if self.event_exit_click:
             self.event_exit_click(self)
-        
 
-class Tray:
+class Tray(QObject):
+    frame_changed = Signal(QPixmap)
+
     def __init__(self, tpc):
+        super().__init__()
         self.icon_path = "./assets/ico.gif"
         self.tpc = tpc        
         self.event_exit_app = None
@@ -113,6 +115,24 @@ class Tray:
             self._icon = SystemTrayIcon(QIcon(QPixmap(ImageQt(im))), self.tpc, self._widget)
         self._icon.event_exit_click = self.on_exit_click        
         self.tpc.run_in_loop = self.run_in_loop
+
+        self.frame_changed.connect(self._icon.setIcon)
+
+        self.frames = []
+        with Image.open(self.icon_path) as im:
+            for i in range(im.n_frames):
+                if i == 0:
+                    continue
+                im.seek(i)
+                self.frames.append(QPixmap(ImageQt(im.copy())))
+
+        self.current_frame = 0
+        self.frame_delay = im.info['duration'] / im.n_frames
+        self.frame_delay = self.frame_delay * 10
+        
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.animate)
+        self.timer.start(int(self.frame_delay) - 160)
 
     def fire_exit_app(self):
         if self.event_exit_app:
@@ -132,29 +152,11 @@ class Tray:
         self.tpc.loop.run_until_complete(func)
 
     def animate(self):
-        """
-        Animates the tray icon by setting each frame from the image to the tray icon in sequence, with a delay in between each frame that is calculated based on the duration of the image.
+        self.current_frame += 1
+        if self.current_frame >= len(self.frames):
+            self.current_frame = 0
+        self.frame_changed.emit(self.frames[self.current_frame])
 
-        The duration of the animation is calculated as the total duration of the image divided by the number of frames in the image. The actual delay between frames is then calculated as the duration of the animation divided by the number of frames, minus the time it took to set the previous frame as the tray icon.
-
-        The reason for subtracting the time it took to set the previous frame is to ensure that the animation runs at the correct speed, regardless of how long it takes to set the tray icon.
-
-        The animation runs indefinitely in the background, until the application is closed.
-        """
-        frames = []
-        with Image.open(self.icon_path) as im:
-            for i in range(im.n_frames):
-                if i == 0:
-                    continue
-                im.seek(i)
-                frames += [im.copy()]
-        frame_delay = (im.info['duration'] / im.n_frames)
-        while True:
-            for i, frame in enumerate(frames):
-                self._icon.setIcon(QPixmap(ImageQt(frame)))
-                last_frame_at = datetime.now()
-                self.tpc.icon = frame
-                tsleep(((frame_delay - (datetime.now() - last_frame_at).total_seconds()) * 0.01) - 0.15)
 
     def run(self):
         """
@@ -163,9 +165,9 @@ class Tray:
         runs the setup hook and animation tasks in the main thread, and executes 
         the application event loop.
         """
-        self.tpc.pc_handlers.notify('TPC', 'TPC started!')
-        Thread(target=self.animate).start()
         self.run_in_loop(self.tpc.setup_hook(self.tpc))
-        Thread(target=self.tpc.restart_bot).start()
-        self._app.exec_()
-        
+        self.tpc.bot_thread = Thread(target=self.tpc.restart_bot)
+        self.tpc.bot_thread.start()
+        self._app.exec()
+
+

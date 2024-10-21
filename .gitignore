@@ -3,3 +3,4 @@
 *.sqlite
 __pychache__/
 test.py
+buffer/

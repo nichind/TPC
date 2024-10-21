@@ -6,4 +6,8 @@ TRAY_SETTING_BOT_NOTLOGGED=Not logged
 TRAY_SETTING_BOT_CHANGETOKEN=Change token
 TRAY_SETTINGS_BOT_RESTART=Restart bot
 
+STARTED_BOT=Bot started!
 STARTED_BOT_TEXT=Connected as {username}
+
+FAILED_START_BOT=Failed to start bot
+INVALID_TOKEN=Invalid token

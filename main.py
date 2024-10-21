@@ -25,6 +25,7 @@ class TPC:
     loop = None
     bot = None
     bot_loop = None
+    bot_thread = None
     logger = logger
     
     logger.info('Loading translations')
@@ -42,7 +43,6 @@ class TPC:
         self.bot_loop = new_event_loop()
         self.bot_loop.run_until_complete(create_dp(self))
 
-    
     def exit(self):
         if self.tray:
             self.pc_handlers.notify('TPC', 'Bye-bye!')
