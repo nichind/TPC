@@ -104,7 +104,7 @@ class Tray(QObject):
 
     def __init__(self, tpc):
         super().__init__()
-        self.icon_path = "./assets/ico.gif"
+        self.icon_path = tpc.icon_path
         self.tpc = tpc        
         self.event_exit_app = None
 
@@ -135,7 +135,7 @@ class Tray(QObject):
         
         self.timer = QTimer()
         self.timer.timeout.connect(self.animate)
-        self.timer.start(int(self.frame_delay) - 160)
+        self.timer.start(int(self.frame_delay))
 
     def fire_exit_app(self):
         if self.event_exit_app:

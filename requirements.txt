@@ -7,4 +7,3 @@ plyer
 PySide6
 PILLOW
 loguru
-git

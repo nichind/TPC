@@ -4,3 +4,7 @@
 __pychache__/
 test.py
 buffer/
+build/
+dist/
+*.spec
+build.bat
