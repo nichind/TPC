@@ -5,9 +5,16 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from asyncio import get_event_loop, new_event_loop
 from typing import Self
+from os.path import expanduser
+import os
 
 
-engine = create_async_engine('sqlite+aiosqlite:///./tpc.sqlite?check_same_thread=False')
+documents_folder = expanduser("~")
+tpc_folder = os.path.join(documents_folder, '.TPC')
+if not os.path.exists(tpc_folder):
+    os.mkdir(tpc_folder)
+db_path = os.path.join(tpc_folder, 'db.sqlite')
+engine = create_async_engine(f'sqlite+aiosqlite:///{db_path}?check_same_thread=False')
 async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 Base = declarative_base()
 
@@ -38,7 +45,7 @@ class Setting(Base):
             setting = (await session.execute(select(Setting).filter_by(**kwargs))).scalar()
             if setting is None and 'key' in kwargs:
                 await cls.add(key=kwargs['key'])
-        return setting
+        return setting if setting is not None else (await cls.get(key=kwargs['key']) if 'key' in kwargs else None)
 
     @classmethod
     async def update(cls, key: str, value: str) -> Self:
