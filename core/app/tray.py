@@ -44,7 +44,8 @@ class SystemTrayIcon(QSystemTrayIcon):
     
         menu.addSeparator()
 
-        self._restart_action = menu.addAction(tpc.tl("TRAY_RESTART"), self.tpc.restart)
+        if 'python' in sys.executable.split('\\')[-1] or 'python' in sys.executable.split('/')[-1]:
+            self._restart_action = menu.addAction(tpc.tl("TRAY_RESTART"), self.tpc.restart)
         self._exit_action = menu.addAction(tpc.tl("TRAY_EXIT"), self.tpc.exit)
 
         self.setContextMenu(menu)
