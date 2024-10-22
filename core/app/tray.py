@@ -32,7 +32,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         self._bot_menu = menu.addMenu(tpc.tl("TRAY_BOT"))
     
         self.bot_info = self._bot_menu.addAction("Loading...")
-        self.bot_info.triggered.connect(lambda x: webopen("https://t.me/"))
         self._bot_menu.addSeparator()
         self.change_token_action = self._bot_menu.addAction(self.tpc.tl("TRAY_SETTING_BOT_CHANGETOKEN"))
         self.change_token_action.triggered.connect(self.change_token)
@@ -40,6 +39,8 @@ class SystemTrayIcon(QSystemTrayIcon):
         self._boot_menu_checkbox_action = self.menu.addAction(self.tpc.tl("TRAY_SETTING_STARTONBOOT"))
         self._boot_menu_checkbox_action.triggered.connect(self.toggle_on_boot)
         self._boot_menu_checkbox_action.setCheckable(True)
+        
+        self._restart_bot_action = self._bot_menu.addAction(tpc.tl("TRAY_RESTART_BOT"), self.tpc.restart_bot)
     
         menu.addSeparator()
 
@@ -63,9 +64,14 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.tpc.loop.run_until_complete(Setting.update(key='start_on_boot', value=checked))
 
     def refresh(self):
+        self.bot_info.triggered.disconnect()
         if self.tpc.bot:
+            self._restart_bot_action.setEnabled(True)
+            self.bot_info.triggered.connect(lambda x: webopen("https://t.me/{}".format(self.tpc.bot.chached_me['username'])))
             self.bot_info.setText(self.tpc.tl("TRAY_SETTING_BOT_LOGGED").format(**self.tpc.bot.chached_me))
         else:
+            self._restart_bot_action.setEnabled(False)
+            self.bot_info.triggered.connect(lambda x: webopen("https://t.me/nichindpf"))
             self.bot_info.setText(self.tpc.tl("TRAY_SETTING_BOT_NOTLOGGED"))
         
         on_boot = (self.tpc.loop.run_until_complete(Setting.get(key='start_on_boot'))).value

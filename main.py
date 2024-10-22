@@ -46,10 +46,17 @@ class TPC:
     
     def restart_bot(self):
         self.logger.info('Restarting bot')
-        if self.bot_loop:
-            self.bot_loop.close()
+        try:
+            if self.bot_loop:
+                self.bot_loop.stop()
+                self.bot_loop.close()
+        except Exception as exc:
+            self.logger.exception(exc)
         self.bot_loop = new_event_loop()
-        self.bot_loop.run_until_complete(create_dp(self))
+        try:
+            self.bot_loop.run_until_complete(create_dp(self))
+        except Exception as exc:
+            self.logger.exception(exc)
 
     def exit(self):
         os._exit(-1)

@@ -11,3 +11,4 @@ STARTED_BOT=Bot started!
 STARTED_BOT_TEXT=Connected as @{username}
 FAILED_START_BOT=Failed to start bot
 INVALID_TOKEN=Invalid token
+TRAY_RESTART_BOT=Restart bot

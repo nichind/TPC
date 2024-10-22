@@ -14,7 +14,11 @@ def main():
         add_data.append(f'--add-data=assets/{asset};assets')
     add_data.append(f'--add-data=.venv/Lib/site-packages/plyer;plyer')
     add_data.append('--add-data=core/bot/handlers;core/bot/handlers')
-    add_data.append('--add-data=core/pc/;core/pc')
+    add_data.append('--add-data=.venv/Lib/site-packages/winsdk;winsdk')
+    add_data.append('--add-data=core/pc;core/pc')
+    add_data.append('--hidden-import=winsdk')
+    add_data.append('--hidden-import=mss')
+    add_data.append('--hidden-import=pynput')
     
     PyInstaller.__main__.run([
         '--onefile',
