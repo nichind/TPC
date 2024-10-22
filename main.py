@@ -25,8 +25,10 @@ class TPC:
     
     tasks = {}
     name = 'tpc'
-    icon_path = './assets/ico.gif'
+    resource_path = resource_path
+    icon_path = resource_path('assets/ico.gif')
     icon = None
+    static_icon = None
     
     system = system().lower()
     pc_handlers = PCHandlers()
@@ -50,10 +52,10 @@ class TPC:
         self.bot_loop.run_until_complete(create_dp(self))
 
     def exit(self):
-        self.run_in_loop(self.pc_handlers.on_shutdown)
-        if self.tray:
-            self.pc_handlers.notify('TPC', 'Bye-bye!')
-        os._exit(0)
+        os._exit(-1)
+        # if self.tray:
+        #     self.pc_handlers.notify('TPC', 'Bye-bye!')
+        # self.run_in_loop(self.pc_handlers.on_shutdown)
 
     def restart(self):
         os.execl(sys.executable, sys.executable, *sys.argv)
@@ -67,18 +69,13 @@ if __name__ == '__main__':
     tpc.translator.chache_translations()
     tpc.tray = Tray(tpc)
     
-    module = glob(join(dirname(__file__) + '/core/pc', "*.py"))
-    __all__ = [basename(f)[:-3] for f in module if isfile(f) and not f.endswith('__init__.py')]
-    for file in __all__:
-        if file != tpc.system and file != 'crossplatform':
-            continue
-        handler = __import__(f'core.pc.{file}',
-                             globals(), locals(), ['PCHandlers'], 0)
-        for attr in dir(handler.PCHandlers):
-            if attr.startswith('__'):
-                continue
-            setattr(tpc.pc_handlers, attr, getattr(handler.PCHandlers(tpc), attr))
+    tpc.pc_handlers = CrossPlatformPCHandlers(tpc)
+    tpc.windows_handlers = WindowsPCHandlers(tpc)
+    tpc.linux_handlers = LinuxPCHandlers(tpc)
+    for method in dir(tpc.__dict__[f'{tpc.system}_handlers']):
+        tpc.pc_handlers.__dict__[method] = getattr(tpc.__dict__[f'{tpc.system}_handlers'], method)
     
+    tpc.pc_handlers.notify(tpc.tl('STARTING'), tpc.tl('STARTING_DESC'))
     loop = new_event_loop()    
     set_event_loop(loop)
     tpc.loop = loop

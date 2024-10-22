@@ -1,0 +1,1 @@
+from .all import CurrentInst as All

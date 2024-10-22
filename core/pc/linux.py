@@ -1,11 +1,9 @@
 class PCHandlers:
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, tpc):
+        self.tpc = tpc
     
-    @staticmethod
-    async def on_startup():
+    async def on_startup(self):
         pass
 
-    @staticmethod
-    async def on_shutdown():
+    async def on_shutdown(self):
         pass

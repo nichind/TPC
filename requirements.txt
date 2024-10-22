@@ -7,3 +7,5 @@ plyer
 PySide6
 PILLOW
 loguru
+winsdk
+pynput
