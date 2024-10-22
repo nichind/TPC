@@ -36,20 +36,16 @@ async def create_dp(tpc):
     except Exception as exc:
         tpc.logger.error(f'Failed to set bot commands: {exc}')
 
-
-
-    # module = glob(join(dirname(__file__) + '/handlers/', "*.py"))
-    # __all__ = [basename(f)[:-3] for f in module if isfile(f) and not f.endswith('__init__.py')]
-    # for file in __all__:
-    #     handler = __import__(f'core.bot.handlers.{file}',
-    #                             globals(), locals(), ['CurrentInst'], 0)
-    #     try:
-    #         handler.CurrentInst(bot).setup(dp)
-    #         tpc.logger.success(f"Handler {file} loaded")
-    #     except AttributeError:
-    #         tpc.logger.error(f"Handler {file} has no CurrentInst class or setup method in it, skipping it")
-    
-    All(bot).setup(dp)
+    module = glob(resource_path('core/bot/handlers/*.py'))
+    __all__ = [basename(f)[:-3] for f in module if isfile(f) and not f.endswith('__init__.py')]
+    for file in __all__:
+        handler = __import__(f'core.bot.handlers.{file}',
+                                globals(), locals(), ['CurrentInst'], 0)
+        try:
+            handler.CurrentInst(bot).setup(dp)
+            tpc.logger.success(f"Handler {file} loaded")
+        except AttributeError:
+            tpc.logger.error(f"Handler {file} has no CurrentInst class or setup method in it, skipping it")
     
     try:
         get_me = (await bot.get_me())

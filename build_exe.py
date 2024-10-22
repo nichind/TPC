@@ -12,7 +12,9 @@ def main():
     assets = listdir('assets')
     for asset in assets:
         add_data.append(f'--add-data=assets/{asset};assets')
-    add_data.append(f'--add-data=.venv/Lib/site-packages/plyer;./plyer')
+    add_data.append(f'--add-data=.venv/Lib/site-packages/plyer;plyer')
+    add_data.append('--add-data=core/bot/handlers;core/bot/handlers')
+    add_data.append('--add-data=core/pc/;core/pc')
     
     PyInstaller.__main__.run([
         '--onefile',

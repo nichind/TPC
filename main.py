@@ -69,11 +69,17 @@ if __name__ == '__main__':
     tpc.translator.chache_translations()
     tpc.tray = Tray(tpc)
     
-    tpc.pc_handlers = CrossPlatformPCHandlers(tpc)
-    tpc.windows_handlers = WindowsPCHandlers(tpc)
-    tpc.linux_handlers = LinuxPCHandlers(tpc)
-    for method in dir(tpc.__dict__[f'{tpc.system}_handlers']):
-        tpc.pc_handlers.__dict__[method] = getattr(tpc.__dict__[f'{tpc.system}_handlers'], method)
+    module = glob(resource_path('core/pc/*.py'))
+    __all__ = [basename(f)[:-3] for f in module if isfile(f) and not f.endswith('__init__.py')]
+    for file in __all__:
+        if file != tpc.system and file != 'crossplatform':
+            continue
+        handler = __import__(f'core.pc.{file}',
+                             globals(), locals(), ['PCHandlers'], 0)
+        for attr in dir(handler.PCHandlers):
+            if attr.startswith('__'):
+                continue
+            setattr(tpc.pc_handlers, attr, getattr(handler.PCHandlers(tpc), attr))
     
     tpc.pc_handlers.notify(tpc.tl('STARTING'), tpc.tl('STARTING_DESC'))
     loop = new_event_loop()    

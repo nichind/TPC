@@ -11,6 +11,7 @@ class PCHandlers:
         self.tpc = tpc
     
     async def on_startup(self):
+        self.tpc.logger.info("Hello Windows!")
         if (await Setting.get(key='language')).value is None:
             windll = ctypes.windll.kernel32
             language = locale.windows_locale[windll.GetUserDefaultUILanguage()]
@@ -23,7 +24,7 @@ class PCHandlers:
         try:
             bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup' % getuser()
             with open(bat_path + '\\' + "tpc.bat", "w+") as bat_file:
-                bat_file.write(r'start /MIN "" %s' % f'{getcwd()}/run.bat')
+                bat_file.write(f'start {getcwd()}\\TPC.exe')
             self.tpc.logger.info('Added TPC to boot.')
         except Exception as exc:
             self.tpc.logger.exception(exc)
