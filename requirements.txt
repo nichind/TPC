@@ -9,3 +9,4 @@ PILLOW
 loguru
 winsdk
 pynput
+PyInstaller
