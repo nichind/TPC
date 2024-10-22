@@ -17,7 +17,7 @@ from PySide6.QtCore import Qt, QSize, Signal, QObject, QTimer
 from webbrowser import open as webopen
 from time import sleep as tsleep
 from json import loads
-from .ask import ask
+from .ui import ask
 from ..util import *
 
 class SystemTrayIcon(QSystemTrayIcon):
