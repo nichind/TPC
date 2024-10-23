@@ -1,3 +1,5 @@
+STARTING=Starting TPC...
+STARTING_DESC=Hi
 TRAY_TITLE=TPC commit #{version}
 TRAY_RESTART=Restart
 TRAY_EXIT=Exit

@@ -78,6 +78,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         on_boot = (self.tpc.loop.run_until_complete(Setting.get(key='start_on_boot'))).value
         self._boot_menu_checkbox_action.setChecked(on_boot == '1')
 
+
     def change_token(self):
         token = ask(
             title=self.tpc.tl("TRAY_SETTING_BOT_CHANGETOKEN_TITLE"),
@@ -170,8 +171,9 @@ class Tray(QObject):
         the application event loop.
         """
         self.run_in_loop(self.tpc.setup_hook(self.tpc))
-        self.tpc.bot_thread = Thread(target=self.tpc.restart_bot)
-        self.tpc.bot_thread.start()
+        self.tpc.restart_bot()
+        # self.tpc.bot_thread = Thread(target=self.tpc.restart_bot)
+        # self.tpc.bot_thread.start()
         self._app.exec()
 
 

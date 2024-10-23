@@ -48,6 +48,7 @@ class TPC:
         self.logger.info('Restarting bot')
         try:
             if self.bot_loop:
+                self.bot_loop.run_until_complete(self.dp.stop_polling())
                 self.bot_loop.stop()
                 self.bot_loop.close()
         except Exception as exc:

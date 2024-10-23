@@ -57,4 +57,5 @@ async def create_dp(tpc):
     tpc.bot = bot
     tpc.bot.chached_me = get_me.__dict__
     tpc.pc_handlers.notify(tpc.tl("STARTED_BOT"), tpc.tl("STARTED_BOT_TEXT").format(**tpc.bot.chached_me))
+    tpc.dp = dp
     await dp.start_polling(bot)
