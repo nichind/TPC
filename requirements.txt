@@ -5,6 +5,7 @@ loguru
 mss
 plyer
 PySide6
+AsyncioPySide6
 PILLOW
 loguru
 winsdk

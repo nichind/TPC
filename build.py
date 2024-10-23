@@ -35,7 +35,7 @@ def main():
         '--hidden-import=plyer.platforms.win.notification',
         '--paths=.venv\Lib\site-packages',
         '--icon=./assets/ico.gif',
-        '--name=TPC',
+        f'--name={system().lower()}',
         *add_data,
         './main.py',
     ]
@@ -47,3 +47,4 @@ def main():
     
 if __name__ == '__main__':
     main()
+

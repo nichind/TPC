@@ -6,6 +6,6 @@ test.py
 buffer/
 build/
 dist/
-*.spec
+TPC.spec
 build.bat
 icon.ico
