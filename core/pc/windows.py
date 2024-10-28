@@ -4,6 +4,7 @@ from ..util.database import Setting
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
 from getpass import getuser
 from os import getcwd, remove
+import sys
 
 
 class PCHandlers:
@@ -24,7 +25,7 @@ class PCHandlers:
         try:
             bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup' % getuser()
             with open(bat_path + '\\' + "tpc.bat", "w+") as bat_file:
-                bat_file.write(f'start {getcwd()}\\TPC.exe')
+                bat_file.write(f'start {sys.executable} {sys.argv[0]}')
             self.tpc.logger.info('Added TPC to boot.')
         except Exception as exc:
             self.tpc.logger.exception(exc)

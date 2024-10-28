@@ -48,7 +48,7 @@ class TPC:
         self.logger.info('Restarting bot')
         try:
             if self.bot_loop:
-                self.bot_loop.run_until_complete(self.dp.stop_polling())
+                # self.bot_loop.run_until_complete(self.dp.stop_polling())
                 self.bot_loop.stop()
                 self.bot_loop.close()
         except Exception as exc:
@@ -71,27 +71,61 @@ class TPC:
 
 
 if __name__ == '__main__':
-    tpc = TPC()
-    tpc.translator = Translator(tpc)
-    tpc.tl = tpc.translator.tl
-    tpc.translator.chache_translations()
-    tpc.tray = Tray(tpc)
-    
-    module = glob(resource_path('core/pc/*.py'))
-    __all__ = [basename(f)[:-3] for f in module if isfile(f) and not f.endswith('__init__.py')]
-    for file in __all__:
-        if file != tpc.system and file != 'crossplatform':
-            continue
-        handler = __import__(f'core.pc.{file}',
-                             globals(), locals(), ['PCHandlers'], 0)
-        for attr in dir(handler.PCHandlers):
-            if attr.startswith('__'):
+    import psutil, time
+    import time
+    import os
+    import psutil
+
+
+    def elapsed_since(start):
+        return time.strftime("%H:%M:%S", time.gmtime(time.time() - start))
+
+
+    def get_process_memory():
+        process = psutil.Process(os.getpid())
+        return process.memory_info().rss
+
+
+
+    def track(func):
+        def wrapper(*args, **kwargs):
+            mem_before = get_process_memory()
+            start = time.time()
+            result = func(*args, **kwargs)
+            elapsed_time = elapsed_since(start)
+            mem_after = get_process_memory()
+            print("{}: memory before: {:,}, after: {:,}, consumed: {:,}; exec time: {}".format(
+                func.__name__,
+                mem_before, mem_after, mem_after - mem_before,
+                elapsed_time))
+            return result
+        return wrapper
+
+    @track
+    def main():
+        tpc = TPC()
+        tpc.translator = Translator(tpc)
+        tpc.tl = tpc.translator.tl
+        tpc.translator.chache_translations()
+        tpc.tray = Tray(tpc)
+        
+        module = glob(resource_path('core/pc/*.py'))
+        __all__ = [basename(f)[:-3] for f in module if isfile(f) and not f.endswith('__init__.py')]
+        for file in __all__:
+            if file != tpc.system and file != 'crossplatform':
                 continue
-            setattr(tpc.pc_handlers, attr, getattr(handler.PCHandlers(tpc), attr))
-    
-    tpc.pc_handlers.notify(tpc.tl('STARTING'), tpc.tl('STARTING_DESC'))
-    loop = new_event_loop()    
-    set_event_loop(loop)
-    tpc.loop = loop
-    tpc.setup_hook = setup_hook
-    tpc.tray.run()
+            handler = __import__(f'core.pc.{file}',
+                                globals(), locals(), ['PCHandlers'], 0)
+            for attr in dir(handler.PCHandlers):
+                if attr.startswith('__'):
+                    continue
+                setattr(tpc.pc_handlers, attr, getattr(handler.PCHandlers(tpc), attr))
+        
+        tpc.pc_handlers.notify(tpc.tl('STARTING'), tpc.tl('STARTING_DESC'))
+        loop = new_event_loop()    
+        set_event_loop(loop)
+        tpc.loop = loop
+        tpc.setup_hook = setup_hook
+        tpc.tray.run()
+        
+    main()

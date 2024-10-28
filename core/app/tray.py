@@ -4,6 +4,7 @@ from io import BytesIO
 from PIL import Image
 from PIL.ImageQt import ImageQt
 import sys
+from json import loads, dumps
 from datetime import datetime
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
@@ -14,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtCore import Qt, QSize, Signal, QObject, QTimer
+from AsyncioPySide6 import AsyncioPySide6
 from webbrowser import open as webopen
 from time import sleep as tsleep
 from json import loads
@@ -35,6 +37,12 @@ class SystemTrayIcon(QSystemTrayIcon):
         self._bot_menu.addSeparator()
         self.change_token_action = self._bot_menu.addAction(self.tpc.tl("TRAY_SETTING_BOT_CHANGETOKEN"))
         self.change_token_action.triggered.connect(self.change_token)
+        
+        self.add_user_action = self._bot_menu.addAction(self.tpc.tl("TRAY_SETTING_BOT_ADDUSER"))
+        self.add_user_action.triggered.connect(self.add_user)
+        
+        self.deauth_all_users_action = self._bot_menu.addAction(self.tpc.tl("TRAY_SETTING_BOT_DEAUTHALLUSERS"))
+        self.deauth_all_users_action.triggered.connect(self.deauth_all_users)
     
         self._boot_menu_checkbox_action = self.menu.addAction(self.tpc.tl("TRAY_SETTING_STARTONBOOT"))
         self._boot_menu_checkbox_action.triggered.connect(self.toggle_on_boot)
@@ -55,7 +63,7 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         self.refresh_timer = QTimer()
         self.refresh_timer.timeout.connect(self.refresh)
-        self.refresh_timer.start(900)
+        self.refresh_timer.start(1500)
 
     def toggle_on_boot(self, checked):
         if checked:
@@ -65,19 +73,21 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.tpc.loop.run_until_complete(Setting.update(key='start_on_boot', value=checked))
 
     def refresh(self):
-        self.bot_info.triggered.disconnect()
-        if self.tpc.bot:
-            self._restart_bot_action.setEnabled(True)
-            self.bot_info.triggered.connect(lambda x: webopen("https://t.me/{}".format(self.tpc.bot.chached_me['username'])))
-            self.bot_info.setText(self.tpc.tl("TRAY_SETTING_BOT_LOGGED").format(**self.tpc.bot.chached_me))
-        else:
-            self._restart_bot_action.setEnabled(False)
-            self.bot_info.triggered.connect(lambda x: webopen("https://t.me/nichindpf"))
-            self.bot_info.setText(self.tpc.tl("TRAY_SETTING_BOT_NOTLOGGED"))
-        
-        on_boot = (self.tpc.loop.run_until_complete(Setting.get(key='start_on_boot'))).value
-        self._boot_menu_checkbox_action.setChecked(on_boot == '1')
-
+        async def _():
+            self.bot_info.triggered.disconnect()
+            if self.tpc.bot:
+                self._restart_bot_action.setEnabled(True)
+                self.bot_info.triggered.connect(lambda x: webopen("https://t.me/{}".format(self.tpc.bot.chached_me['username'])))
+                self.bot_info.setText(self.tpc.tl("TRAY_SETTING_BOT_LOGGED").format(**self.tpc.bot.chached_me))
+            else:
+                self._restart_bot_action.setEnabled(False)
+                self.bot_info.triggered.connect(lambda x: webopen("https://t.me/nichindpf"))
+                self.bot_info.setText(self.tpc.tl("TRAY_SETTING_BOT_NOTLOGGED"))
+            
+            on_boot = (await Setting.get(key='start_on_boot')).value
+            self._boot_menu_checkbox_action.setChecked(on_boot == '1')
+            
+        AsyncioPySide6.runTask(_())
 
     def change_token(self):
         token = ask(
@@ -97,6 +107,40 @@ class SystemTrayIcon(QSystemTrayIcon):
             self.tpc.bot_loop = None
         self.tpc.bot_thread = Thread(target=self.tpc.restart_bot)
         self.tpc.bot_thread.start()
+
+    def add_user(self):
+        async def _():
+            user_id = ask(
+                title=self.tpc.tl("TRAY_SETTING_BOT_ADDUSER_TITLE"),
+            )
+            if not user_id:
+                return
+            
+            if user_id.isdigit() is False:
+                return self.tpc.pc_handlers.notify('TPC', self.tpc.tl("TRAY_SETTING_BOT_ADDUSER_INVALID"))
+            
+            print(1)
+            users = await Setting.get(key='user_ids')
+            print(2)
+            if users is None or users.value is None:
+                users.value = '[]'
+            users = loads(users.value)
+            
+            print(user_id)
+            user_id = int(user_id)
+            if user_id in users:
+                users.remove(user_id)
+            else:
+                users.append(user_id)
+            await Setting.update(key='user_ids', value=dumps(users))
+        
+        AsyncioPySide6.runTask(_())
+
+    def deauth_all_users(self):
+        async def _():
+            await Setting.update(key='user_ids', value='[]')
+
+        AsyncioPySide6.runTask(_())
 
     def on_icon_click(self, reason):
         print(reason)
@@ -171,10 +215,11 @@ class Tray(QObject):
         the application event loop.
         """
         self.run_in_loop(self.tpc.setup_hook(self.tpc))
-        self.tpc.restart_bot()
-        # self.tpc.bot_thread = Thread(target=self.tpc.restart_bot)
-        # self.tpc.bot_thread.start()
-        self._app.exec()
+        # self.tpc.restart_bot()
+        self.tpc.bot_thread = Thread(target=self.tpc.restart_bot)
+        self.tpc.bot_thread.start()
+        with AsyncioPySide6.use_asyncio():
+            self._app.exec()
 
 
 

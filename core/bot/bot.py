@@ -1,14 +1,8 @@
 from aiogram import Bot, Dispatcher
-from aiogram.utils.token import TokenValidationError
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-from aiogram.types import BotCommand
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.exceptions import *
-from json import load
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.utils.exceptions import *
 from glob import glob
 from os.path import dirname, basename, isfile, join, isdir
-from os import listdir
 from ..util import *
 from .handlers import *
 import asyncio
@@ -20,8 +14,9 @@ async def create_dp(tpc):
     token = (await Setting.get(key='bot_token')).value
     
     try:
-        bot = Bot(token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    except TokenValidationError:
+        bot = Bot(token, parse_mode='HTML')
+    except Exception as exc:
+        print(exc)
         tpc.pc_handlers.notify(tpc.tl("FAILED_START_BOT"), tpc.tl("INVALID_TOKEN"))
         tpc.logger.error(f"Invalid token: {token}")
         tpc.bot = None
@@ -30,7 +25,7 @@ async def create_dp(tpc):
     bot.logger = tpc.logger
     bot.tpc = tpc
 
-    dp = Dispatcher(storage=MemoryStorage())
+    dp = Dispatcher(bot, storage=MemoryStorage())
     try:
         pass
     except Exception as exc:
@@ -50,12 +45,14 @@ async def create_dp(tpc):
     try:
         get_me = (await bot.get_me())
         tpc.logger.success(f"Created Dispatcher for @{get_me.username}, starting polling...")
-    except TelegramUnauthorizedError:
+    except Exception as exc:
+        print(exc)
         tpc.logger.error(f"Invalid token: {token}")
         await bot.session.close()
         return
     tpc.bot = bot
-    tpc.bot.chached_me = get_me.__dict__
+    tpc.bot.chached_me = get_me.__dict__['_values']
+    print(tpc.bot.chached_me)
     tpc.pc_handlers.notify(tpc.tl("STARTED_BOT"), tpc.tl("STARTED_BOT_TEXT").format(**tpc.bot.chached_me))
     tpc.dp = dp
     await dp.start_polling(bot)

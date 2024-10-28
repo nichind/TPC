@@ -1,4 +1,4 @@
-aiogram
+aiogram==2.25.2
 aiosqlite
 sqlalchemy[asyncio]
 loguru
@@ -10,4 +10,5 @@ PILLOW
 loguru
 winsdk
 pynput
+psutil
 PyInstaller

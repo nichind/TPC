@@ -9,3 +9,4 @@ dist/
 TPC.spec
 build.bat
 icon.ico
+.vscode/
