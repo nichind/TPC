@@ -8,16 +8,11 @@ def main():
     
     add_data = []
     venv_path = getcwd() + '/.venv'
-    for dir in listdir(venv_path):
-        if path.isdir(venv_path + '/' + dir) is False:
-            continue
-        for dir2 in listdir(venv_path + '/' + dir):
-            if path.isdir(venv_path + '/' + dir + '/' + dir2) is False:
-                continue
-            if dir2 == 'site-packages':
-                venv_path = venv_path + '/' + dir + '/' + dir2
-                break
-            
+    for root, dirs, files in walk(venv_path):
+        if 'site-packages' in dirs:
+            venv_path = root + '/site-packages'
+            break
+        
     locales = listdir('./locales')
     for locale in locales:
         add_data.append(f'--add-data=./locales/{locale};locales')
@@ -26,7 +21,7 @@ def main():
         add_data.append(f'--add-data=assets/{asset};assets')
     add_data.append(f'--add-data={venv_path}/plyer;plyer')
     add_data.append('--add-data=./core/bot/handlers;core/bot/handlers')
-    if system() == 'Windows':
+    if system().lower() == 'windows':
         add_data.append(f'--add-data={venv_path}/winsdk;winsdk')
         add_data.append('--hidden-import=winsdk')
     add_data.append('--add-data=./core/pc;core/pc')
