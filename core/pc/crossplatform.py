@@ -19,8 +19,8 @@ class PCHandlers:
             img_io = BytesIO()
             img.save(img_io, 'PNG')
             img_io.seek(0)
-            self.tpc.logger.info('Screenshot taken')
-            return img_io
+        self.tpc.logger.info('Screenshot taken')
+        return img_io
         
     def notify(self, title: str, text: str):
         """

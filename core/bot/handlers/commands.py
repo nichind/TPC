@@ -14,6 +14,10 @@ class CurrentInst:
         self.tpc = bot.tpc
         self.filters = bot.filters
 
+    async def press_callback(self, call: CallbackQuery, state: FSMContext):
+        await call.answer('✅')
+        await self.tpc.pc_handlers.press(call.data.split('!')[0].split(':')[1])
+
     async def start(self, message: Message, state: FSMContext):
         await message.delete()
 
@@ -44,6 +48,7 @@ class CurrentInst:
         await message.answer(self.tpc.tl("LOCK_TEXT"))
             
     def setup(self, dp: Dispatcher):
+        dp.register_callback_query_handler(self.press_callback, self.filters['authorized'](), text_contains='press:')
         dp.register_message_handler(self.start, self.filters['authorized'](), commands=['start'])
         dp.register_message_handler(self.screenshot, self.filters['authorized'](), commands=['screenshot'])
         dp.register_message_handler(self.lock, self.filters['authorized'](), commands=['lock'])
