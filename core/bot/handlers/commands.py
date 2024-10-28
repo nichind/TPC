@@ -28,11 +28,16 @@ class CurrentInst:
         self.tpc.restart()
         
     async def screenshot(self, message: Message, state: FSMContext):
-        screenshot = await self.tpc.pc_handlers.screenshot()
-        file = InputFile(screenshot, filename=datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.png')
-        await self.bot.send_photo(message.chat.id, file, caption=self.tpc.tl("SCREENSHOT_TEXT"))
-        await self.bot.send_document(message.chat.id, file)
-        
+        await message.delete()
+        with await self.tpc.pc_handlers.screenshot() as screenshot:
+            await self.bot.send_photo(message.chat.id,
+                InputFile(await self.tpc.pc_handlers.screenshot(), filename=datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.png'),
+                caption=self.tpc.tl("SCREENSHOT_TEXT")
+            )
+            await self.bot.send_document(message.chat.id,
+                InputFile(await self.tpc.pc_handlers.screenshot(), filename=datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.png')
+            )
+            
     def setup(self, dp: Dispatcher):
         dp.register_message_handler(self.start, self.filters['authorized'](), commands=['start'])
         dp.register_message_handler(self.screenshot, self.filters['authorized'](), commands=['screenshot'])

@@ -11,14 +11,16 @@ class PCHandlers:
     def __init__(self, tpc):
         self.tpc = tpc
 
-    async def screenshot(self):
+    async def screenshot(self) -> BytesIO:
+        self.tpc.logger.info('Taking screenshot')
         with mss() as sct:
             sct_img = sct.grab(sct.monitors[0])
             img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
-            with BytesIO() as f:
-                img.save(f, format="PNG")
-                f.seek(0)
-                return f.read()
+            img_io = BytesIO()
+            img.save(img_io, 'PNG')
+            img_io.seek(0)
+            self.tpc.logger.info('Screenshot taken')
+            return img_io
         
     def notify(self, title: str, text: str):
         """
@@ -38,6 +40,7 @@ class PCHandlers:
         Args:
             key (str): The key to press. If the key is a combination of keys (e.g. "ctrl&alt&del"), split them by "&" and provide the VK codes as strings (e.g. "17&18&46")
         """
+        self.tpc.logger.info(f'Pressing key "{key}"')
         keyboard = Controller()
         if '&' in key:
             for key in key.split('&'):

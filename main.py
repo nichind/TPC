@@ -68,23 +68,6 @@ class TPC:
         os._exit(-1)
 
 
-class InterceptHandler(logging.Handler):
-    def emit(self, record):
-        try:
-            level = app.logger.level(record.levelname).name
-        except ValueError:
-            level = record.levelno
-
-        frame, depth = logging.currentframe(), 2
-        while frame.f_code.co_filename == logging.__file__:
-            frame = frame.f_back
-            depth += 1
-
-        app.logger.opt(depth=depth, exception=record.exc_info).log(
-            level, record.getMessage()
-        )
-
-
 def format_record(record: dict) -> str:
     format_string = LOGURU_FORMAT
 
@@ -96,9 +79,6 @@ def format_record(record: dict) -> str:
 
     format_string += "{exception}\n"
     return format_string
-
-
-logging.getLogger().handlers = [InterceptHandler()]
 
 
 if __name__ == '__main__':

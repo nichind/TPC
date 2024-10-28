@@ -10,6 +10,7 @@ import asyncio
 
 
 async def create_dp(tpc):
+    tpc.logger.info('Creating DP...')
     asyncio.set_event_loop(tpc.bot_loop)
     
     token = (await Setting.get(key='bot_token')).value
@@ -17,9 +18,8 @@ async def create_dp(tpc):
     try:
         bot = Bot(token, parse_mode='HTML')
     except Exception as exc:
-        print(exc)
+        tpc.logger.exception(f'Failed to create bot: {exc}')
         tpc.pc_handlers.notify(tpc.tl("FAILED_START_BOT"), tpc.tl("INVALID_TOKEN"))
-        tpc.logger.error(f"Invalid token: {token}")
         tpc.bot = None
         return 
 
@@ -45,19 +45,18 @@ async def create_dp(tpc):
             handler.CurrentInst(bot).setup(dp)
             tpc.logger.success(f"Handler {file} loaded")
         except AttributeError:
-            tpc.logger.error(f"Handler {file} has no CurrentInst class or setup method in it, skipping it")
+            tpc.logger.error(f"Handler {file} has no CurrentInst class or setup method in it or it's simply broken... Skipping it")
     
     try:
         get_me = (await bot.get_me())
         tpc.logger.success(f"Created Dispatcher for @{get_me.username}, starting polling...")
     except Exception as exc:
-        print(exc)
-        tpc.logger.error(f"Invalid token: {token}")
+        tpc.logger.exception(f'Failed to get bot info: {exc}')
         await bot.session.close()
         return
+    
     tpc.bot = bot
     tpc.bot.chached_me = get_me.__dict__['_values']
-    print(tpc.bot.chached_me)
     tpc.pc_handlers.notify(tpc.tl("STARTED_BOT"), tpc.tl("STARTED_BOT_TEXT").format(**tpc.bot.chached_me))
     tpc.dp = dp
     await dp.start_polling(bot)
