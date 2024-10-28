@@ -16,3 +16,4 @@ INVALID_TOKEN=Invalid token
 TRAY_RESTART_BOT=Restart bot
 
 YOUR_ID=Your ID: <code>{id}</code>
+LOCK_TEXT= 🔒 Successfully locked your PC

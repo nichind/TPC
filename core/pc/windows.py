@@ -3,7 +3,7 @@ import locale
 from ..util.database import Setting
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
 from getpass import getuser
-from os import getcwd, remove
+from os import getcwd, remove, system
 import sys
 
 
@@ -49,3 +49,7 @@ class PCHandlers:
             return info_dict
 
         return None
+
+    async def lock(self):
+        self.tpc.logger.info('Locking PC...')
+        system('rundll32.exe user32.dll,LockWorkStation')

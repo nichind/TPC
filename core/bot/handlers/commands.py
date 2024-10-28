@@ -38,7 +38,13 @@ class CurrentInst:
                 InputFile(await self.tpc.pc_handlers.screenshot(), filename=datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.png')
             )
             
+    async def lock(self, message: Message, state: FSMContext):
+        await message.delete()
+        await self.tpc.pc_handlers.lock()
+        await message.answer(self.tpc.tl("LOCK_TEXT"))
+            
     def setup(self, dp: Dispatcher):
         dp.register_message_handler(self.start, self.filters['authorized'](), commands=['start'])
         dp.register_message_handler(self.screenshot, self.filters['authorized'](), commands=['screenshot'])
+        dp.register_message_handler(self.lock, self.filters['authorized'](), commands=['lock'])
         

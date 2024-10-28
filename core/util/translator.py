@@ -28,7 +28,7 @@ class Translator:
         """
         locales = listdir(resource_path(f'{self.locales_folder}'))
         for locale in locales:
-            with open(resource_path(f'{self.locales_folder}/{locale}'), 'r') as locale_file:
+            with open(resource_path(f'{self.locales_folder}/{locale}'), 'r', encoding='utf-8') as locale_file:
                 if locale.split('.')[0] not in self.tlbook:
                     self.tlbook[locale.split('.')[0]] = {}
                 for line in locale_file.readlines():
@@ -41,7 +41,7 @@ class Translator:
             language = Setting.get(key='language').value
         if language.upper() not in self.tlbook:
             return key
-        with open(resource_path(f'{self.locales_folder}/{language.upper()}.txt'), 'r') as locale:
+        with open(resource_path(f'{self.locales_folder}/{language.upper()}.txt'), 'r', encoding='utf-8') as locale:
             for line in locale.readlines():
                 if '=' in line and line.split('=')[0].strip().upper() == key.upper():
                     res = line[line.index('=') + 1:].replace('\\n', '\n').replace('\\t', '\t')

@@ -33,7 +33,7 @@ class PCHandlers:
         self.tpc.logger.info(f'''Sending notification ("{title}","{text}")''')
         notification.notify(title=title, message=text, timeout=10, app_name=self.tpc.name, app_icon=self.tpc.static_icon)
     
-    def press(self, key: str):
+    async def press(self, key: str):
         """
         Press a given key on the keyboard.
 

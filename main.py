@@ -117,7 +117,7 @@ if __name__ == '__main__':
                 continue
             setattr(tpc.pc_handlers, attr, getattr(handler.PCHandlers(tpc), attr))
     
-    tpc.pc_handlers.notify(tpc.tl('STARTING'), tpc.tl('STARTING_DESC'))
+    # tpc.pc_handlers.notify(tpc.tl('STARTING'), tpc.tl('STARTING_DESC'))
     loop = new_event_loop()    
     set_event_loop(loop)
     tpc.loop = loop
