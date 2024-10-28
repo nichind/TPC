@@ -10,3 +10,4 @@ TPC.spec
 build.bat
 icon.ico
 .vscode/
+logs/

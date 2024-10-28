@@ -12,6 +12,7 @@ class CurrentInst:
         self.bot = bot
         self.bot_id = bot.id
         self.tpc = bot.tpc
+        self.filters = bot.filters
 
     async def start(self, message: Message, state: FSMContext):
         await message.delete()
@@ -33,6 +34,6 @@ class CurrentInst:
         await self.bot.send_document(message.chat.id, file)
         
     def setup(self, dp: Dispatcher):
-        dp.register_message_handler(self.start, Authorized(), commands=['start'])
-        dp.register_message_handler(self.screenshot, Authorized(), commands=['screenshot'])
+        dp.register_message_handler(self.start, self.filters['authorized'](), commands=['start'])
+        dp.register_message_handler(self.screenshot, self.filters['authorized'](), commands=['screenshot'])
         

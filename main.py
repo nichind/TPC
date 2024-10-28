@@ -6,8 +6,13 @@ from threading import Thread
 from platform import system
 from os.path import dirname, basename, isfile, join
 from glob import glob
+import logging
+from os.path import expanduser
 from loguru import logger
 import subprocess
+from loguru import logger
+from pprint import pformat
+from loguru._defaults import LOGURU_FORMAT
 
 
 def get_git_revision_short_hash() -> str:
@@ -40,10 +45,6 @@ class TPC:
     bot_thread = None
     logger = logger
     
-    logger.info('Loading translations')
-    
-    logger.info('Created TPC instance')
-    
     def restart_bot(self):
         self.logger.info('Restarting bot')
         try:
@@ -61,71 +62,84 @@ class TPC:
 
     def exit(self):
         os._exit(-1)
-        # if self.tray:
-        #     self.pc_handlers.notify('TPC', 'Bye-bye!')
-        # self.run_in_loop(self.pc_handlers.on_shutdown)
 
     def restart(self):
         os.execl(sys.executable, sys.executable, *sys.argv)
         os._exit(-1)
 
 
+class InterceptHandler(logging.Handler):
+    def emit(self, record):
+        try:
+            level = app.logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
+
+        frame, depth = logging.currentframe(), 2
+        while frame.f_code.co_filename == logging.__file__:
+            frame = frame.f_back
+            depth += 1
+
+        app.logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
+
+
+def format_record(record: dict) -> str:
+    format_string = LOGURU_FORMAT
+
+    if record["extra"].get("payload") is not None:
+        record["extra"]["payload"] = pformat(
+            record["extra"]["payload"], indent=4, compact=True, width=88
+        )
+        format_string += "\n<level>{extra[payload]}</level>"
+
+    format_string += "{exception}\n"
+    return format_string
+
+
+logging.getLogger().handlers = [InterceptHandler()]
+
+
 if __name__ == '__main__':
-    import psutil, time
-    import time
-    import os
-    import psutil
+    tpc = TPC()
+    logger.info('Created TPC instance')  
 
-
-    def elapsed_since(start):
-        return time.strftime("%H:%M:%S", time.gmtime(time.time() - start))
-
-
-    def get_process_memory():
-        process = psutil.Process(os.getpid())
-        return process.memory_info().rss
-
-
-
-    def track(func):
-        def wrapper(*args, **kwargs):
-            mem_before = get_process_memory()
-            start = time.time()
-            result = func(*args, **kwargs)
-            elapsed_time = elapsed_since(start)
-            mem_after = get_process_memory()
-            print("{}: memory before: {:,}, after: {:,}, consumed: {:,}; exec time: {}".format(
-                func.__name__,
-                mem_before, mem_after, mem_after - mem_before,
-                elapsed_time))
-            return result
-        return wrapper
-
-    @track
-    def main():
-        tpc = TPC()
-        tpc.translator = Translator(tpc)
-        tpc.tl = tpc.translator.tl
-        tpc.translator.chache_translations()
-        tpc.tray = Tray(tpc)
-        
-        module = glob(resource_path('core/pc/*.py'))
-        __all__ = [basename(f)[:-3] for f in module if isfile(f) and not f.endswith('__init__.py')]
-        for file in __all__:
-            if file != tpc.system and file != 'crossplatform':
+    documents_folder = expanduser("~")
+    tpc_folder = os.path.join(documents_folder, '.TPC')
+    if not os.path.exists(tpc_folder):
+        os.mkdir(tpc_folder)
+    
+    try:
+        tpc.logger.configure(handlers=[
+            {"sink": sys.stdout, "level": logging.DEBUG, "format": format_record},
+            {"sink": tpc_folder + "/logs/{time:YYYY}-{time:MM}-{time:DD}.log", "level": logging.DEBUG, "format": format_record}
+        ])
+    except Exception as exc:
+        tpc.logger.configure(handlers=[
+            {"sink": tpc_folder + "/logs/{time:YYYY}-{time:MM}-{time:DD}.log", "level": logging.DEBUG, "format": format_record}
+        ])
+    
+    tpc.translator = Translator(tpc)
+    tpc.tl = tpc.translator.tl
+    tpc.translator.chache_translations()
+    tpc.tray = Tray(tpc)
+    
+    module = glob(resource_path('core/pc/*.py'))
+    __all__ = [basename(f)[:-3] for f in module if isfile(f) and not f.endswith('__init__.py')]
+    for file in __all__:
+        if file != tpc.system and file != 'crossplatform':
+            continue
+        handler = __import__(f'core.pc.{file}',
+                            globals(), locals(), ['PCHandlers'], 0)
+        for attr in dir(handler.PCHandlers):
+            if attr.startswith('__'):
                 continue
-            handler = __import__(f'core.pc.{file}',
-                                globals(), locals(), ['PCHandlers'], 0)
-            for attr in dir(handler.PCHandlers):
-                if attr.startswith('__'):
-                    continue
-                setattr(tpc.pc_handlers, attr, getattr(handler.PCHandlers(tpc), attr))
-        
-        tpc.pc_handlers.notify(tpc.tl('STARTING'), tpc.tl('STARTING_DESC'))
-        loop = new_event_loop()    
-        set_event_loop(loop)
-        tpc.loop = loop
-        tpc.setup_hook = setup_hook
-        tpc.tray.run()
-        
-    main()
+            setattr(tpc.pc_handlers, attr, getattr(handler.PCHandlers(tpc), attr))
+    
+    tpc.pc_handlers.notify(tpc.tl('STARTING'), tpc.tl('STARTING_DESC'))
+    loop = new_event_loop()    
+    set_event_loop(loop)
+    tpc.loop = loop
+    tpc.setup_hook = setup_hook
+    tpc.tray.run()

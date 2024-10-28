@@ -5,6 +5,7 @@ from glob import glob
 from os.path import dirname, basename, isfile, join, isdir
 from ..util import *
 from .handlers import *
+from .filters import Authorized, Deauthorized
 import asyncio
 
 
@@ -24,6 +25,10 @@ async def create_dp(tpc):
 
     bot.logger = tpc.logger
     bot.tpc = tpc
+    bot.filters = {
+        'authorized': Authorized,
+        'deauthorized': Deauthorized
+    }
 
     dp = Dispatcher(bot, storage=MemoryStorage())
     try:
