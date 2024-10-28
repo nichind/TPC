@@ -1,5 +1,5 @@
 from shutil import copytree, copyfile, rmtree
-from os import getcwd, listdir
+from os import getcwd, listdir, walk, path
 from platform import system
 import PyInstaller.__main__
 
@@ -8,10 +8,16 @@ def main():
     
     add_data = []
     venv_path = getcwd() + '/.venv'
-    if system().lower() == 'windows':
-        venv_path += '/Lib/site-packages'
-    else:
-        venv_path += '/lib/python3.11/site-packages'
+    for dir in listdir(venv_path):
+        if path.isdir(venv_path + '/' + dir) is False:
+            continue
+        for dir2 in listdir(venv_path + '/' + dir):
+            if path.isdir(venv_path + '/' + dir + '/' + dir2) is False:
+                continue
+            if dir2 == 'site-packages':
+                venv_path = venv_path + '/' + dir + '/' + dir2
+                break
+            
     locales = listdir('./locales')
     for locale in locales:
         add_data.append(f'--add-data=./locales/{locale};locales')
@@ -25,6 +31,7 @@ def main():
         add_data.append('--hidden-import=winsdk')
     add_data.append('--add-data=./core/pc;core/pc')
     add_data.append('--hidden-import=mss')
+    add_data.append('--hidden-import=psutil')
     add_data.append('--hidden-import=pynput')
     
     all_args = [
