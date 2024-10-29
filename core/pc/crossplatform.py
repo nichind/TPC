@@ -41,10 +41,16 @@ class PCHandlers:
             key (str): The key to press. If the key is a combination of keys (e.g. "ctrl&alt&del"), split them by "&" and provide the VK codes as strings (e.g. "17&18&46")
         """
         self.tpc.logger.info(f'Pressing key "{key}"')
-        keyboard = Controller()
-        if '&' in key:
-            for key in key.split('&'):
-                keyboard.press(KeyCode.from_vk(int(key, 0)))
-        else:
-            keyboard.press(KeyCode.from_vk(int(key, 0)))
-    
+        try:
+            keyboard = Controller()
+            if '&' in key:
+                for key in key.split('&'):
+                    keyboard.tap(KeyCode.from_vk(int(key, 0)))
+                    # keyboard.press(KeyCode.from_vk(int(key, 0)))
+            else:
+                keyboard.tap(KeyCode.from_vk(int(key, 0)))
+                # keyboard.press(KeyCode.from_vk(int(key, 0)))
+            keyboard.release_all()
+        except Exception as exc:
+            self.tpc.logger.exception(f'Failed to press key "{key}": {exc}')
+            

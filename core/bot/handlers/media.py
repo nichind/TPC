@@ -2,6 +2,7 @@ from aiogram import types, Bot, Dispatcher
 from aiogram.types import Message, CallbackQuery, InputFile, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.dispatcher import FSMContext
 from datetime import datetime
+from asyncio import sleep
 from ...util import *
 from ..filters import *
 import psutil
@@ -26,6 +27,7 @@ class CurrentInst:
 
 
     async def media_control(self, message: Message, state: FSMContext):
+        await message.delete()
         markup = InlineKeyboardMarkup(row_width=3)
         markup.row(InlineKeyboardButton(text='⏮️ Previous', callback_data='media:0xB1'),
                    InlineKeyboardButton(text='⏯️ Play/Pause', callback_data='media:0xB3'),
@@ -37,8 +39,9 @@ class CurrentInst:
         await self.bot.send_message(message.from_user.id, await self.message_constructor(), reply_markup=markup)
 
     async def update_message(self, call: CallbackQuery, state: FSMContext):
-        await call.answer()
         await self.tpc.pc_handlers.press(call.data.split(':')[1])
+        await sleep(0.)
+        await call.answer()
         await call.message.edit_text(await self.message_constructor(), reply_markup=call.message.reply_markup)
             
     def setup(self, dp: Dispatcher):

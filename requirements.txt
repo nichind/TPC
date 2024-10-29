@@ -12,3 +12,4 @@ loguru
 winsdk
 pynput
 psutil
+pyautogui

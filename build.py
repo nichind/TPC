@@ -24,6 +24,8 @@ def main():
     if system().lower() == 'windows':
         add_data.append(f'--add-data={venv_path}/winsdk;winsdk')
         add_data.append('--hidden-import=winsdk')
+    else:
+        add_data.append('--hidden-import=dbus')
     add_data.append('--add-data=./core/pc;core/pc')
     add_data.append('--hidden-import=mss')
     add_data.append('--hidden-import=psutil')
@@ -43,7 +45,8 @@ def main():
     ]
     
     if system().lower() == 'linux':
-        all_args = [i.replace(';', ':') for i in all_args]   
+        all_args = [i.replace(';', ':') for i in all_args] 
+      
     PyInstaller.__main__.run(all_args)
 
     

@@ -9,7 +9,13 @@ from .filters import Authorized, Deauthorized
 import asyncio
 
 
-async def create_dp(tpc):
+async def create_dp(tpc) -> None:
+    """
+    Creates the bot and the dispatcher, sets up handlers and starts polling.
+
+    :param tpc: The TelegramPC instance
+    :type tpc: TelegramPC
+    """
     tpc.logger.info('Creating DP...')
     asyncio.set_event_loop(tpc.bot_loop)
     
@@ -52,7 +58,7 @@ async def create_dp(tpc):
         tpc.logger.success(f"Created Dispatcher for @{get_me.username}, starting polling...")
     except Exception as exc:
         tpc.logger.exception(f'Failed to get bot info: {exc}')
-        await bot.session.close()
+        await (await bot.get_session()).close()
         return
     
     tpc.bot = bot
