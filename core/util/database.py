@@ -10,7 +10,9 @@ import os
 
 
 documents_folder = expanduser("~")
-tpc_folder = os.path.join(documents_folder, '.TPC')
+tpc_folder = os.path.join(documents_folder, '.config/tpc')
+if not os.path.exists(documents_folder + '/.config'):
+    os.mkdir(documents_folder + '/.config')
 if not os.path.exists(tpc_folder):
     os.mkdir(tpc_folder)
 db_path = os.path.join(tpc_folder, 'db.sqlite')

@@ -50,13 +50,15 @@ class TPC:
         try:
             if self.bot_loop:
                 # self.bot_loop.run_until_complete(self.dp.stop_polling())
+                if self.bot_task:
+                    self.bot_task.cancel()
                 self.bot_loop.stop()
-                self.bot_loop.close()
         except Exception as exc:
-            self.logger.exception(exc)
+            self.logger.exception(f'Failed to stop old bot loop: {exc}')
         self.bot_loop = new_event_loop()
         try:
-            self.bot_loop.run_until_complete(create_dp(self))
+            self.bot_task = self.bot_loop.create_task(create_dp(self))
+            self.bot_loop.run_until_complete(self.bot_task)
         except Exception as exc:
             self.logger.exception(exc)
 
@@ -86,7 +88,7 @@ if __name__ == '__main__':
     logger.info('Created TPC instance')  
 
     documents_folder = expanduser("~")
-    tpc_folder = os.path.join(documents_folder, '.TPC')
+    tpc_folder = os.path.join(documents_folder, '.config/tpc')
     if not os.path.exists(tpc_folder):
         os.mkdir(tpc_folder)
     

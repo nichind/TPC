@@ -22,6 +22,7 @@ from json import loads
 from .ui import ask
 from ..util import *
 
+
 class SystemTrayIcon(QSystemTrayIcon):
     def __init__(self, icon, tpc, parent=None):
         super().__init__(icon, parent)
@@ -215,11 +216,7 @@ class Tray(QObject):
         the application event loop.
         """
         self.run_in_loop(self.tpc.setup_hook(self.tpc))
-        # self.tpc.restart_bot()
         self.tpc.bot_thread = Thread(target=self.tpc.restart_bot)
         self.tpc.bot_thread.start()
         with AsyncioPySide6.use_asyncio():
             self._app.exec()
-
-
-
