@@ -1,7 +1,9 @@
 import ctypes
 import locale
 from ..util.database import Setting
-from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
+from winsdk.windows.media.control import (
+    GlobalSystemMediaTransportControlsSessionManager as MediaManager,
+)
 from getpass import getuser
 from os import getcwd, remove, system
 import sys
@@ -10,38 +12,41 @@ import sys
 class PCHandlers:
     def __init__(self, tpc):
         self.tpc = tpc
-    
+
     async def on_startup(self):
         """
         Perform actions required during startup.
 
         This method logs a startup message and checks if the language setting
         is set. If not, it retrieves the user's default UI language from the
-        system and updates the setting with the first two letters of the 
+        system and updates the setting with the first two letters of the
         language code in uppercase.
         """
         self.tpc.logger.info("Hello Windows!")
-        if (await Setting.get(key='language')).value is None:
+        if (await Setting.get(key="language")).value is None:
             windll = ctypes.windll.kernel32
             language = locale.windows_locale[windll.GetUserDefaultUILanguage()]
-            await Setting.update(key='language', value=language[:2].upper())
+            await Setting.update(key="language", value=language[:2].upper())
 
     async def on_shutdown(self):
         pass
-    
+
     def add_to_boot(self):
         """
         Add the application to the system startup.
 
-        This method creates a batch file in the Windows Startup folder, 
-        which will execute the application upon user login. It logs the 
+        This method creates a batch file in the Windows Startup folder,
+        which will execute the application upon user login. It logs the
         success of this operation or any exceptions encountered.
         """
         try:
-            bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup' % getuser()
-            with open(bat_path + '\\' + "tpc.bat", "w+") as bat_file:
-                bat_file.write(f'start {sys.executable} {sys.argv[0]}')
-            self.tpc.logger.info('Added TPC to boot.')
+            bat_path = (
+                r"C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
+                % getuser()
+            )
+            with open(bat_path + "\\" + "tpc.bat", "w+") as bat_file:
+                bat_file.write(f"start {sys.executable} {sys.argv[0]}")
+            self.tpc.logger.info("Added TPC to boot.")
         except Exception as exc:
             self.tpc.logger.exception(exc)
 
@@ -52,12 +57,15 @@ class PCHandlers:
         This method removes the "tpc.bat" file from the Startup folder.
         """
         try:
-            remove(r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tpc.bat' % getuser())
-            self.tpc.logger.info('Removed TPC from boot.')
+            remove(
+                r"C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tpc.bat"
+                % getuser()
+            )
+            self.tpc.logger.info("Removed TPC from boot.")
         except Exception as exc:
             self.tpc.logger.exception(exc)
-        
-    async def get_playing_media(self) -> dict | None:        
+
+    async def get_playing_media(self) -> dict | None:
         """
         Get the currently playing media.
 
@@ -80,11 +88,15 @@ class PCHandlers:
         if info:
             if info.thumbnail:
                 pass
-            info_dict = {song_attr: info.__getattribute__(song_attr) for song_attr in dir(info) if song_attr[0] != '_'}
-            info_dict['genres'] = list(info_dict['genres'])
+            info_dict = {
+                song_attr: info.__getattribute__(song_attr)
+                for song_attr in dir(info)
+                if song_attr[0] != "_"
+            }
+            info_dict["genres"] = list(info_dict["genres"])
             return info_dict
         return None
 
     async def lock(self) -> None:
-        self.tpc.logger.info('Locking PC...')
-        system('rundll32.exe user32.dll,LockWorkStation')
+        self.tpc.logger.info("Locking PC...")
+        system("rundll32.exe user32.dll,LockWorkStation")

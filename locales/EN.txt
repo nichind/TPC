@@ -19,3 +19,8 @@ TRAY_RESTART_BOT=Restart bot
 
 YOUR_ID=Your ID: <code>{id}</code>
 LOCK_TEXT= 🔒 Successfully locked your PC
+
+START_BOT_COMMAND_DESC=Starts the bot
+SCREENSHOT_COMMAND_DESC=Take a screenshot
+LOCK_COMMAND_DESC=Lock your PC
+MEDIA_COMMAND_DESC=View playing media

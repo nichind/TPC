@@ -12,16 +12,16 @@ class PCHandlers:
         self.tpc = tpc
 
     async def screenshot(self) -> BytesIO:
-        self.tpc.logger.info('Taking screenshot')
+        self.tpc.logger.info("Taking screenshot")
         with mss() as sct:
             sct_img = sct.grab(sct.monitors[0])
             img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
             img_io = BytesIO()
-            img.save(img_io, 'PNG')
+            img.save(img_io, "PNG")
             img_io.seek(0)
-        self.tpc.logger.info('Screenshot taken')
+        self.tpc.logger.info("Screenshot taken")
         return img_io
-        
+
     def notify(self, title: str, text: str):
         """
         Show a notification with the given title and text.
@@ -30,9 +30,15 @@ class PCHandlers:
             title (str): The title of the notification.
             text (str): The text of the notification.
         """
-        self.tpc.logger.info(f'''Sending notification ("{title}","{text}")''')
-        notification.notify(title=title, message=text, timeout=10, app_name=self.tpc.name, app_icon=self.tpc.static_icon)
-    
+        self.tpc.logger.info(f"""Sending notification ("{title}","{text}")""")
+        notification.notify(
+            title=title,
+            message=text,
+            timeout=10,
+            app_name=self.tpc.name,
+            app_icon=self.tpc.static_icon,
+        )
+
     async def press(self, key: str):
         """
         Press a given key on the keyboard.
@@ -43,8 +49,8 @@ class PCHandlers:
         self.tpc.logger.info(f'Pressing key "{key}"')
         try:
             keyboard = Controller()
-            if '&' in key:
-                for key in key.split('&'):
+            if "&" in key:
+                for key in key.split("&"):
                     keyboard.tap(KeyCode.from_vk(int(key, 0)))
                     # keyboard.press(KeyCode.from_vk(int(key, 0)))
             else:
@@ -53,4 +59,3 @@ class PCHandlers:
             keyboard.release_all()
         except Exception as exc:
             self.tpc.logger.exception(f'Failed to press key "{key}": {exc}')
-            

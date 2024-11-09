@@ -17,8 +17,7 @@ class CurrentInst:
 
     async def any_callback(self, callback: CallbackQuery, state: FSMContext):
         await callback.message.delete()
-        
+
     def setup(self, dp: Dispatcher):
         dp.register_message_handler(self.any_message, Deauthorized())
         dp.register_callback_query_handler(self.any_callback, Deauthorized())
-        

@@ -15,9 +15,9 @@ class Authorized(BoundFilter):
         users = loads(value)
         if action.from_user.id in users:
             return True
-        return False        
-        
-        
+        return False
+
+
 class Deauthorized(BoundFilter):
     def __init__(self):
         pass

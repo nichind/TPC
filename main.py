@@ -16,25 +16,29 @@ from loguru._defaults import LOGURU_FORMAT
 
 
 def get_git_revision_short_hash() -> str:
-    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+    return (
+        subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+        .decode("ascii")
+        .strip()
+    )
 
 
 class TPC:
     class PCHandlers:
         pass
-    
+
     try:
         version = get_git_revision_short_hash()
     except Exception:
-        version = 'unknown'
-    
+        version = "unknown"
+
     tasks = {}
-    name = 'tpc'
+    name = "tpc"
     resource_path = resource_path
-    icon_path = resource_path('assets/ico.gif')
+    icon_path = resource_path("assets/ico.gif")
     icon = None
     static_icon = None
-    
+
     system = system().lower()
     pc_handlers = PCHandlers()
     setup_hook = None
@@ -44,9 +48,9 @@ class TPC:
     bot_loop = None
     bot_thread = None
     logger = logger
-    
+
     def restart_bot(self):
-        self.logger.info('Restarting bot')
+        self.logger.info("Restarting bot")
         try:
             if self.bot_loop:
                 # self.bot_loop.run_until_complete(self.dp.stop_polling())
@@ -54,7 +58,7 @@ class TPC:
                     self.bot_task.cancel()
                 self.bot_loop.stop()
         except Exception as exc:
-            self.logger.exception(f'Failed to stop old bot loop: {exc}')
+            self.logger.exception(f"Failed to stop old bot loop: {exc}")
         self.bot_loop = new_event_loop()
         try:
             self.bot_task = self.bot_loop.create_task(create_dp(self))
@@ -83,44 +87,57 @@ def format_record(record: dict) -> str:
     return format_string
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     tpc = TPC()
-    logger.info('Created TPC instance')  
+    logger.info("Created TPC instance")
 
     documents_folder = expanduser("~")
-    tpc_folder = os.path.join(documents_folder, '.config/tpc')
+    tpc_folder = os.path.join(documents_folder, ".config/tpc")
     if not os.path.exists(tpc_folder):
         os.mkdir(tpc_folder)
-    
+
     try:
-        tpc.logger.configure(handlers=[
-            {"sink": sys.stdout, "level": logging.DEBUG, "format": format_record},
-            {"sink": tpc_folder + "/logs/{time:YYYY}-{time:MM}-{time:DD}.log", "level": logging.DEBUG, "format": format_record}
-        ])
+        tpc.logger.configure(
+            handlers=[
+                {"sink": sys.stdout, "level": logging.DEBUG, "format": format_record},
+                {
+                    "sink": tpc_folder + "/logs/{time:YYYY}-{time:MM}-{time:DD}.log",
+                    "level": logging.DEBUG,
+                    "format": format_record,
+                },
+            ]
+        )
     except Exception as exc:
-        tpc.logger.configure(handlers=[
-            {"sink": tpc_folder + "/logs/{time:YYYY}-{time:MM}-{time:DD}.log", "level": logging.DEBUG, "format": format_record}
-        ])
-    
+        tpc.logger.configure(
+            handlers=[
+                {
+                    "sink": tpc_folder + "/logs/{time:YYYY}-{time:MM}-{time:DD}.log",
+                    "level": logging.DEBUG,
+                    "format": format_record,
+                }
+            ]
+        )
+
     tpc.translator = Translator(tpc)
     tpc.tl = tpc.translator.tl
     tpc.translator.chache_translations()
     tpc.tray = Tray(tpc)
-    
-    module = glob(resource_path('core/pc/*.py'))
-    __all__ = [basename(f)[:-3] for f in module if isfile(f) and not f.endswith('__init__.py')]
+
+    module = glob(resource_path("core/pc/*.py"))
+    __all__ = [
+        basename(f)[:-3] for f in module if isfile(f) and not f.endswith("__init__.py")
+    ]
     for file in __all__:
-        if file != tpc.system and file != 'crossplatform':
+        if file != tpc.system and file != "crossplatform":
             continue
-        handler = __import__(f'core.pc.{file}',
-                            globals(), locals(), ['PCHandlers'], 0)
+        handler = __import__(f"core.pc.{file}", globals(), locals(), ["PCHandlers"], 0)
         for attr in dir(handler.PCHandlers):
-            if attr.startswith('__'):
+            if attr.startswith("__"):
                 continue
             setattr(tpc.pc_handlers, attr, getattr(handler.PCHandlers(tpc), attr))
-    
+
     # tpc.pc_handlers.notify(tpc.tl('STARTING'), tpc.tl('STARTING_DESC'))
-    loop = new_event_loop()    
+    loop = new_event_loop()
     set_event_loop(loop)
     tpc.loop = loop
     tpc.setup_hook = setup_hook
