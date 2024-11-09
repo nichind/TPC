@@ -1,3 +1,5 @@
+from os import path, remove
+import sys
 import dbus
 
 
@@ -12,10 +14,22 @@ class PCHandlers:
         pass
 
     def add_to_boot(self):
-        pass
+        autostart_dir = path.join(path.expanduser("~"), ".config", "autostart")
+        if not path.exists(path.join(autostart_dir, "tpc.desktop")):
+            with open(path.join(autostart_dir, "tpc.desktop"), "w") as config_file:
+                config_file.write("[Desktop Entry]\n")
+                config_file.write("Type=Application\n")
+                config_file.write("Name=TPC\n")
+                config_file.write(f"Exec={sys.executable} {sys.argv[0]}\n")
+                config_file.write("Terminal=false\n")
+                config_file.write("X-GNOME-Autostart-enabled=true")
+        self.tpc.logger.info("Added TPC to boot.")
 
     def remove_from_boot(self):
-        pass
+        autostart_path = f"{path.expanduser('~')}/.config/autostart"
+        if path.exists(path.join(autostart_path, "tpc.desktop")):
+            remove(path.join(autostart_path, "tpc.desktop"))
+        self.tpc.logger.info("Removed TPC from boot.")
 
     async def get_playing_media(self) -> dict | None:
         """
