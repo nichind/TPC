@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, JSON
+from sqlalchemy import Column, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
@@ -6,16 +6,16 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from asyncio import get_event_loop, new_event_loop
 from typing import Self
 from os.path import expanduser
-import os
+from os import path, mkdir
 
 
 documents_folder = expanduser("~")
-tpc_folder = os.path.join(documents_folder, ".config/tpc")
-if not os.path.exists(documents_folder + "/.config"):
-    os.mkdir(documents_folder + "/.config")
-if not os.path.exists(tpc_folder):
-    os.mkdir(tpc_folder)
-db_path = os.path.join(tpc_folder, "db.sqlite")
+tpc_folder = path.join(documents_folder, ".config/tpc")
+if not path.exists(documents_folder + "/.config"):
+    mkdir(documents_folder + "/.config")
+if not path.exists(tpc_folder):
+    mkdir(tpc_folder)
+db_path = path.join(tpc_folder, "db.sqlite")
 engine = create_async_engine(f"sqlite+aiosqlite:///{db_path}?check_same_thread=False")
 async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 Base = declarative_base()

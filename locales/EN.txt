@@ -22,5 +22,16 @@ LOCK_TEXT= 🔒 Successfully locked your PC
 
 START_BOT_COMMAND_DESC=Starts the bot
 SCREENSHOT_COMMAND_DESC=Take a screenshot
+START_TEXT=Hello, {name}\n📅 {date}\n\n<b>💻 Stats:</b>\n×\tCPU: <code>{cpu}%</code>\n×\tRAM: <code>{ram_used}GB</code>/<code>{ram_total}GB</code> (<code>{ram_percent}%</code>)\n\n\nTPC: <i><code>{usage}MB</code></i>
+
 LOCK_COMMAND_DESC=Lock your PC
+
 MEDIA_COMMAND_DESC=View playing media
+MEDIA_NOTHING=<i>Nothing</i>
+MEDIA_TEXT=🎧 <b>{text}</b>\n\n<i>/media</i> - ⌚ {date}
+MEDIA_PREVIOUS=⏮️ Previous
+MEDIA_PAUSE=⏯️ Play/Pause
+MEDIA_NEXT=⏭️ Next
+MEDIA_VOLDOWN=🔉 Volume down
+MEDIA_MUTE=🔇 Mute/Unmute
+MEDIA_VOLUP=🔊 Volume up

@@ -1,17 +1,13 @@
-from aiogram import types, Bot, Dispatcher
+from aiogram import Bot, Dispatcher
 from aiogram.types import (
     Message,
     CallbackQuery,
-    InputFile,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
 from aiogram.dispatcher import FSMContext
 from datetime import datetime
 from asyncio import sleep
-from ...util import *
-from ..filters import *
-import psutil
 
 
 class CurrentInst:
@@ -26,23 +22,40 @@ class CurrentInst:
             info_dict = await self.tpc.pc_handlers.get_playing_media()
             if info_dict:
                 return f'{info_dict["artist"]} — {info_dict["title"]}'
-            return f"<i>Nothing</i>"
+            return self.tpc.tl("MEDIA_NOTHING")
 
-        text = f"""🎧 <b>{await get_text()}</b>\n\n<i>/media</i> - ⌚ {datetime.now().strftime("<code>%d/%m/%Y</code>, <code>%H:%M:%S</code>")}"""
+        text = self.tpc.tl("MEDIA_TEXT").format(
+            text=await get_text(),
+            date=datetime.now().strftime(
+                "<code>%d/%m/%Y</code>, <code>%H:%M:%S</code>"
+            ),
+        )
         return text
 
     async def media_control(self, message: Message, state: FSMContext):
         await message.delete()
         markup = InlineKeyboardMarkup(row_width=3)
         markup.row(
-            InlineKeyboardButton(text="⏮️ Previous", callback_data="media:0xB1"),
-            InlineKeyboardButton(text="⏯️ Play/Pause", callback_data="media:0xB3"),
-            InlineKeyboardButton(text="⏭️ Next", callback_data="media:0xB0"),
+            InlineKeyboardButton(
+                text=self.tpc.tl("MEDIA_PREVIOUS"), callback_data="media:0xB1"
+            ),
+            InlineKeyboardButton(
+                text=self.tpc.tl("MEDIA_PAUSE"), callback_data="media:0xB3"
+            ),
+            InlineKeyboardButton(
+                text=self.tpc.tl("MEDIA_NEXT"), callback_data="media:0xB0"
+            ),
         )
         markup.row(
-            InlineKeyboardButton(text="🔉 Volume down", callback_data="media:0xAE"),
-            InlineKeyboardButton(text="🔇 Mute/Unmute", callback_data="media:0xAD"),
-            InlineKeyboardButton(text="🔊 Volume up", callback_data="media:0xAF"),
+            InlineKeyboardButton(
+                text=self.tpc.tl("MEDIA_VOLDOWN"), callback_data="media:0xAE"
+            ),
+            InlineKeyboardButton(
+                text=self.tpc.tl("MEDIA_MUTE"), callback_data="media:0xAD"
+            ),
+            InlineKeyboardButton(
+                text=self.tpc.tl("MEDIA_VOLUP"), callback_data="media:0xAF"
+            ),
         )
 
         await self.bot.send_message(

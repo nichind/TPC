@@ -1,4 +1,4 @@
-from os import getcwd, listdir
+from os import listdir
 from .database import Setting
 from .other import resource_path
 
@@ -90,5 +90,5 @@ class Translator:
         """
         try:
             return self.tlbook[language.upper()][key.upper()].format(**self.locals())
-        except:
+        except Exception:
             return self.translate_string(key, language)

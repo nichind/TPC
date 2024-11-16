@@ -1,11 +1,10 @@
 from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.utils.exceptions import *
 from glob import glob
-from os.path import dirname, basename, isfile, join, isdir
-from ..util import *
-from .handlers import *
+from os.path import basename, isfile
+from core.util.database import Setting
+import core
 from .filters import Authorized, Deauthorized
 import asyncio
 
@@ -46,7 +45,7 @@ async def create_dp(tpc) -> None:
     except Exception as exc:
         tpc.logger.error(f"Failed to set bot commands: {exc}")
 
-    module = glob(resource_path("core/bot/handlers/*.py"))
+    module = glob(core.resource_path("core/bot/handlers/*.py"))
     __all__ = [
         basename(f)[:-3] for f in module if isfile(f) and not f.endswith("__init__.py")
     ]

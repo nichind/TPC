@@ -2,8 +2,6 @@ from mss import mss
 from plyer import notification
 from PIL import Image
 from io import BytesIO
-from datetime import datetime
-from os import listdir, getcwd, mkdir
 from pynput.keyboard import KeyCode, Controller
 
 

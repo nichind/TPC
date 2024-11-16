@@ -1,5 +1,4 @@
-from shutil import copytree, copyfile, rmtree
-from os import getcwd, listdir, walk, path
+from os import getcwd, listdir, walk
 from platform import system
 import PyInstaller.__main__
 

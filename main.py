@@ -1,16 +1,14 @@
 import os
 import sys
-from core import *
-from asyncio import new_event_loop, gather, run, get_event_loop, set_event_loop, sleep
-from threading import Thread
+import core
+from asyncio import new_event_loop, set_event_loop
 from platform import system
-from os.path import dirname, basename, isfile, join
+from os.path import basename, isfile
 from glob import glob
 import logging
 from os.path import expanduser
 from loguru import logger
 import subprocess
-from loguru import logger
 from pprint import pformat
 from loguru._defaults import LOGURU_FORMAT
 
@@ -34,7 +32,7 @@ class TPC:
 
     tasks = {}
     name = "tpc"
-    resource_path = resource_path
+    resource_path = core.resource_path
     icon_path = resource_path("assets/ico.gif")
     icon = None
     static_icon = None
@@ -61,7 +59,7 @@ class TPC:
             self.logger.exception(f"Failed to stop old bot loop: {exc}")
         self.bot_loop = new_event_loop()
         try:
-            self.bot_task = self.bot_loop.create_task(create_dp(self))
+            self.bot_task = self.bot_loop.create_task(core.create_dp(self))
             self.bot_loop.run_until_complete(self.bot_task)
         except Exception as exc:
             self.logger.exception(exc)
@@ -108,6 +106,7 @@ if __name__ == "__main__":
             ]
         )
     except Exception as exc:
+        tpc.logger.exception(exc)
         tpc.logger.configure(
             handlers=[
                 {
@@ -118,12 +117,12 @@ if __name__ == "__main__":
             ]
         )
 
-    tpc.translator = Translator(tpc)
+    tpc.translator = core.Translator(tpc)
     tpc.tl = tpc.translator.tl
     tpc.translator.chache_translations()
-    tpc.tray = Tray(tpc)
+    tpc.tray = core.Tray(tpc)
 
-    module = glob(resource_path("core/pc/*.py"))
+    module = glob(core.resource_path("core/pc/*.py"))
     __all__ = [
         basename(f)[:-3] for f in module if isfile(f) and not f.endswith("__init__.py")
     ]
@@ -136,9 +135,13 @@ if __name__ == "__main__":
                 continue
             setattr(tpc.pc_handlers, attr, getattr(handler.PCHandlers(tpc), attr))
 
-    # tpc.pc_handlers.notify(tpc.tl('STARTING'), tpc.tl('STARTING_DESC'))
     loop = new_event_loop()
     set_event_loop(loop)
     tpc.loop = loop
-    tpc.setup_hook = setup_hook
+    tpc.setup_hook = core.setup_hook
     tpc.tray.run()
+
+    def on_close():
+        tpc.pc_handlers.on_shutdown()
+
+    tpc.tray._app.aboutToQuit.connect(on_close)

@@ -1,8 +1,6 @@
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message, CallbackQuery
 from aiogram.dispatcher import FSMContext
-from ...util import *
-from ..filters import *
 
 
 class CurrentInst:
@@ -10,6 +8,7 @@ class CurrentInst:
         self.bot = bot
         self.bot_id = bot.id
         self.tpc = bot.tpc
+        self.filters = bot.filters
 
     async def any_message(self, message: Message, state: FSMContext):
         await message.answer(self.tpc.tl("YOUR_ID").format(id=message.from_user.id))
@@ -19,5 +18,7 @@ class CurrentInst:
         await callback.message.delete()
 
     def setup(self, dp: Dispatcher):
-        dp.register_message_handler(self.any_message, Deauthorized())
-        dp.register_callback_query_handler(self.any_callback, Deauthorized())
+        dp.register_message_handler(self.any_message, self.filters["deauthorized"]())
+        dp.register_callback_query_handler(
+            self.any_callback, self.filters["deauthorized"]()
+        )

@@ -5,7 +5,7 @@ from winsdk.windows.media.control import (
     GlobalSystemMediaTransportControlsSessionManager as MediaManager,
 )
 from getpass import getuser
-from os import getcwd, remove, system
+from os import remove, system, path
 import sys
 
 
@@ -14,14 +14,6 @@ class PCHandlers:
         self.tpc = tpc
 
     async def on_startup(self):
-        """
-        Perform actions required during startup.
-
-        This method logs a startup message and checks if the language setting
-        is set. If not, it retrieves the user's default UI language from the
-        system and updates the setting with the first two letters of the
-        language code in uppercase.
-        """
         self.tpc.logger.info("Hello Windows!")
         if (await Setting.get(key="language")).value is None:
             windll = ctypes.windll.kernel32
@@ -32,13 +24,6 @@ class PCHandlers:
         pass
 
     def add_to_boot(self):
-        """
-        Add the application to the system startup.
-
-        This method creates a batch file in the Windows Startup folder,
-        which will execute the application upon user login. It logs the
-        success of this operation or any exceptions encountered.
-        """
         try:
             bat_path = (
                 r"C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
@@ -51,11 +36,6 @@ class PCHandlers:
             self.tpc.logger.exception(exc)
 
     def remove_from_boot(self):
-        """
-        Removes the TPC from startup.
-
-        This method removes the "tpc.bat" file from the Startup folder.
-        """
         try:
             remove(
                 r"C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tpc.bat"
@@ -64,6 +44,12 @@ class PCHandlers:
             self.tpc.logger.info("Removed TPC from boot.")
         except Exception as exc:
             self.tpc.logger.exception(exc)
+
+    def check_autostart(self) -> bool:
+        return path.exists(
+            r"C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\tpc.bat"
+            % getuser()
+        )
 
     async def get_playing_media(self) -> dict | None:
         """

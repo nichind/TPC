@@ -1,38 +1,25 @@
 from asyncio import (
-    sleep,
-    new_event_loop,
-    create_task,
-    gather,
     get_event_loop,
     run_coroutine_threadsafe,
 )
 from threading import Thread
-from io import BytesIO
 from PIL import Image
 from PIL.ImageQt import ImageQt
 import sys
 from json import loads, dumps
-from datetime import datetime
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
-    QMainWindow,
     QApplication,
-    QLabel,
-    QToolBar,
-    QStatusBar,
     QSystemTrayIcon,
     QMenu,
-    QCheckBox,
     QWidget,
 )
-from PySide6.QtGui import QAction, QIcon
-from PySide6.QtCore import Qt, QSize, Signal, QObject, QTimer
+from PySide6.QtCore import Signal, QObject, QTimer
 from AsyncioPySide6 import AsyncioPySide6
 from webbrowser import open as webopen
-from time import sleep as tsleep
-from json import loads
 from .ui import ask
-from ..util import *
+from core.util.database import Setting
+import core
 
 
 class SystemTrayIcon(QSystemTrayIcon):
@@ -161,9 +148,7 @@ class SystemTrayIcon(QSystemTrayIcon):
                     "TPC", self.tpc.tl("TRAY_SETTING_BOT_ADDUSER_INVALID")
                 )
 
-            print(1)
             users = await Setting.get(key="user_ids")
-            print(2)
             if users is None or users.value is None:
                 users.value = "[]"
             users = loads(users.value)
@@ -227,8 +212,8 @@ class Tray(QObject):
                 self.frames.append(QPixmap(ImageQt(im.copy())))
 
             im.seek(0)
-            im.save(resource_path("icon.ico"), format="ICO")
-            self.tpc.static_icon = resource_path("icon.ico")
+            im.save(core.resource_path("icon.ico"), format="ICO")
+            self.tpc.static_icon = core.resource_path("icon.ico")
 
             self.frame_delay = im.info["duration"] / im.n_frames
             self.frame_delay = self.frame_delay * 10

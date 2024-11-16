@@ -1,4 +1,5 @@
 from os import path, remove
+from ..util.database import Setting
 import sys
 import dbus
 
@@ -9,6 +10,8 @@ class PCHandlers:
 
     async def on_startup(self):
         self.tpc.logger.info("Hello Linux!")
+        if (await Setting.get(key="language")).value is None:
+            await Setting.update(key="language", value="en")
 
     async def on_shutdown(self):
         pass
@@ -30,6 +33,11 @@ class PCHandlers:
         if path.exists(path.join(autostart_path, "tpc.desktop")):
             remove(path.join(autostart_path, "tpc.desktop"))
         self.tpc.logger.info("Removed TPC from boot.")
+
+    def check_autostart(self) -> bool:
+        return path.exists(
+            path.join(f"{path.expanduser('~')}/.config/autostart", "tpc.desktop")
+        )
 
     async def get_playing_media(self) -> dict | None:
         """
